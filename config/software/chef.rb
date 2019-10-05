@@ -1,5 +1,6 @@
 #
 # Copyright 2012-2019, Chef Software Inc.
+# Copyright 2019, Cinc Project
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -99,5 +100,10 @@ build do
       appbundle "chef", env: env
       appbundle "ohai", env: env
     end
+  end
+
+  copy "#{project_dir}/cinc/cinc-wrapper", "#{install_dir}/bin/"
+  %w(chef-apply chef-client chef-shell chef-solo).each do |bin|
+    link "#{install_dir}/bin/cinc-wrapper", "#{install_dir}/bin/#{bin}"
   end
 end
