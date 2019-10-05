@@ -1,5 +1,6 @@
 #
 # Copyright:: Copyright (c) Chef Software Inc.
+# Copyright 2019-2020, Cinc Project
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -114,5 +115,10 @@ build do
       gem_install_dir = shellout!("#{install_dir}/embedded/bin/gem open #{gem}", env: env).stdout.chomp
       remove_directory "#{gem_install_dir}/test"
     end
+  end
+
+  copy "#{project_dir}/cinc/cinc-wrapper", "#{install_dir}/bin/"
+  %w(chef-apply chef-client chef-shell chef-solo).each do |bin|
+    link "#{install_dir}/bin/cinc-wrapper", "#{install_dir}/bin/#{bin}"
   end
 end
