@@ -96,7 +96,7 @@ build do
   end
 
   block do
-    appbundle "chef", lockdir: project_dir, gem: "inspec-core-bin", without: excluded_groups, env: env
+    appbundle "chef", lockdir: project_dir, gem: "cinc-auditor-core-bin", without: excluded_groups, env: env
     appbundle "chef", lockdir: project_dir, gem: "chef-bin", without: excluded_groups, env: env
     appbundle "chef", lockdir: project_dir, gem: "chef", without: excluded_groups, env: env
     appbundle "chef", lockdir: project_dir, gem: "ohai", without: excluded_groups, env: env
@@ -113,7 +113,7 @@ build do
   end
 
   copy "#{project_dir}/cinc/cinc-wrapper", "#{install_dir}/bin/"
-  %w(chef-apply chef-client chef-shell chef-solo).each do |bin|
+  %w(chef-apply chef-client chef-shell chef-solo inspec).each do |bin|
     link "#{install_dir}/bin/cinc-wrapper", "#{install_dir}/bin/#{bin}"
   end
 end
