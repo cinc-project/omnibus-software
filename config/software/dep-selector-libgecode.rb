@@ -16,7 +16,7 @@
 # expeditor/ignore: deprecated 2021-04
 
 name "dep-selector-libgecode"
-default_version "1.3.1"
+default_version "1.3.5"
 
 license "Apache-2.0"
 license_file "https://raw.githubusercontent.com/chef/dep-selector-libgecode/master/LICENSE"
@@ -44,5 +44,7 @@ build do
 
   gem "install dep-selector-libgecode" \
       " --version '#{version}'" \
+      " --source https://packagecloud.io/ramereth/cinc/" \
+      " --clear-sources" \
       "  --no-document", env: env
 end
