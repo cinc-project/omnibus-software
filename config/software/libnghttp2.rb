@@ -39,6 +39,8 @@ build do
     "--with-openssl",
   ]
 
+  command "libtoolize --force && aclocal && autoheader && automake --force-missing --add-missing && autoconf", env: env
+
   configure(*configure_options, env: env)
 
   make "-j #{workers}", env: env
