@@ -21,7 +21,7 @@ default_version "main"
 license "Apache-2.0"
 license_file "LICENSE"
 
-source git: "https://github.com/berkshelf/berkshelf.git"
+source git: "https://github.com/chef/berkshelf.git"
 
 relative_path "berkshelf"
 
