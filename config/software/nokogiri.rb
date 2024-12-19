@@ -16,6 +16,8 @@
 
 name "nokogiri"
 
+default_version "1.17.2"
+
 license "MIT"
 license_file "https://raw.githubusercontent.com/sparklemotion/nokogiri/master/LICENSE.md"
 # We install only nokogiri from rubygems here.
