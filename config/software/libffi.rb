@@ -47,9 +47,9 @@ build do
     patch source: "libffi-3.3-arm64.patch", plevel: 1, env: env
   end
 
-  if rhel?
-    patch source: "0001-Forward-declare-open_temp_exec_file.patch", plevel: 1, env: env
-  end
+  #if rhel?
+  #  patch source: "0001-Forward-declare-open_temp_exec_file.patch", plevel: 1, env: env
+  #end
 
   # AIX's old version of patch doesn't like the patch here
   unless aix?
