@@ -355,7 +355,6 @@ build do
     dlls = [
       "libwinpthread-1",
       "libstdc++-6",
-      "libssp-0",
     ]
 
     if windows_arch_i386?
