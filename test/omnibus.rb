@@ -35,7 +35,7 @@ windows_arch env_omnibus_windows_arch
 
 # Disable git caching
 # ------------------------------
-use_git_caching false
+use_git_caching ENV["GIT_CACHING"] || true
 
 # Enable S3 asset caching
 # ------------------------------
@@ -49,11 +49,13 @@ use_s3_caching false
 # ------------------------------
 build_retries 0
 
-if ENV["SKIP_HEALTH_CHECK"]
+if ENV["SKIP_HEALTH_CHECK"] == "true"
   health_check false
 end
 
 fips_mode ENV["OMNIBUS_FIPS_MODE"] if ENV["OMNIBUS_FIPS_MODE"]
+cache_dir "#{ENV["CI_PROJECT_DIR"] || "/omnibus-software"}/cache"
+git_cache_dir "#{ENV["CI_PROJECT_DIR"] || "/omnibus-software"}/cache/git_cache"
 
 # Load additional software
 # ------------------------------

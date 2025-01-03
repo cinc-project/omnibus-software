@@ -1,0 +1,19 @@
+.build:
+  stage: build
+  image: cincproject/omnibus-debian
+  tags:
+    - docker-x86_64
+  script:
+    - cd test
+    - bash omnibus-build.sh
+  cache:
+    paths:
+      - bundle/vendor/*
+      - cache/
+  rules:
+    # Always run on child pipelines
+      - if: $CI_PIPELINE_SOURCE == "parent_pipeline"
+  artifacts:
+    expire_in: 1mo
+    paths:
+      - test/pkg/

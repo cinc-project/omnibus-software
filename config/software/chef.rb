@@ -17,7 +17,7 @@
 # expeditor/ignore: no version pinning
 
 name "chef"
-default_version "main"
+default_version "stable/cinc"
 
 license "Apache-2.0"
 license_file "LICENSE"
@@ -113,7 +113,7 @@ build do
   end
 
   copy "#{project_dir}/cinc/cinc-wrapper", "#{install_dir}/bin/"
-  %w(chef-apply chef-client chef-shell chef-solo inspec).each do |bin|
+  %w{chef-apply chef-client chef-shell chef-solo inspec}.each do |bin|
     link "#{install_dir}/bin/cinc-wrapper", "#{install_dir}/bin/#{bin}"
   end
 end

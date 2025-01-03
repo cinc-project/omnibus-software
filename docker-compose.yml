@@ -1,6 +1,6 @@
 services:
   builder:
-    build: .
+    image: cincproject/omnibus-debian
     volumes:
       - ./:/omnibus-software
       - ./test:/test
