@@ -1,0 +1,65 @@
+---
+image: cincproject/omnibus-debian
+
+stages:
+  - test
+  - generate
+  - trigger
+  - build
+
+workflow:
+  rules:
+    # Run if we trigger a pipeline from the web
+    - if: $CI_PIPELINE_SOURCE == "web"
+    # Run if this is a merge request
+    - if: $CI_MERGE_REQUEST_ID
+
+generate-builds:
+  stage: generate
+  tags:
+    - docker-x86_64
+  script:
+    - source /home/omnibus/load-omnibus-toolchain.sh
+    - ./test/generate_gitlab_jobs.rb
+  artifacts:
+    paths:
+      - build-jobs.yml
+
+test:ruby-3.0:
+  stage: test
+  image: ruby:3.0
+  tags:
+    - docker-x86_64
+  script:
+    - .expeditor/run_linux_tests.sh rake
+
+test:ruby-3.1:
+  stage: test
+  image: ruby:3.1
+  tags:
+    - docker-x86_64
+  script:
+    - .expeditor/run_linux_tests.sh rake
+
+test:ruby-3.2:
+  stage: test
+  image: ruby:3.2
+  tags:
+    - docker-x86_64
+  script:
+    - .expeditor/run_linux_tests.sh rake
+
+test:ruby-3.3:
+  stage: test
+  image: ruby:3.3
+  tags:
+    - docker-x86_64
+  script:
+    - .expeditor/run_linux_tests.sh rake
+
+trigger-builds:
+  stage: trigger
+  trigger:
+    include:
+      - artifact: build-jobs.yml
+        job: generate-builds

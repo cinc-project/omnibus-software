@@ -1,7 +1,6 @@
 #!/bin/bash
 
 # shellcheck disable=SC1090
-. ~/.bashrc
 
 echo "--- Setting Omnibus build environment variables"
 
@@ -27,6 +26,8 @@ echo "========================================"
 echo "= Tool Versions"
 echo "========================================"
 echo ""
+echo "$(head -1 /opt/omnibus-toolchain/version-manifest.txt)"
+echo ""
 echo "Bash.........$(bash --version | head -1)"
 echo "Bundler......$(bundle --version | head -1)"
 echo "GCC..........$(gcc --version | head -1)"
@@ -38,18 +39,22 @@ echo ""
 echo "========================================"
 
 rm -f Gemfile.lock
-rm -rf .bundle
 
 if [[ $CI == true ]]; then
-  DEBUG=1 bundle config set --local without development
+  bundle config set --local path ${CI_PROJECT_DIR}/bundle/vendor
+  bundle config set --local without development
 fi
 
 echo "--- Running bundle install"
 
-DEBUG=1 bundle install
+bundle install
+
+if [[ $SKIP_HEALTH_CHECK == true ]] ; then
+  echo "--- Skipping health checks"
+fi
 
 if [[ $CI == true ]]; then
   echo "--- Building"
-  bundle exec omnibus build test
+  bundle exec omnibus build test -l ${OMNIBUS_LOG_LEVEL:-info} --override append_timestamp:false
   exit $?
 fi
