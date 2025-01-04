@@ -63,3 +63,4 @@ trigger-builds:
     include:
       - artifact: build-jobs.yml
         job: generate-builds
+    strategy: depend
