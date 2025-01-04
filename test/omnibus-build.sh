@@ -47,6 +47,7 @@ fi
 
 echo "--- Running bundle install"
 
+git config --global --add safe.directory /omnibus-software
 bundle install
 
 if [[ $SKIP_HEALTH_CHECK == true ]] ; then

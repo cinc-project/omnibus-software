@@ -4,6 +4,7 @@ services:
     volumes:
       - ./:/omnibus-software
       - ./test:/test
+      - ./bundle:/bundle
     working_dir: /test
     command: bash --init-file omnibus-build.sh
 
