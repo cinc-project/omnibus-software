@@ -35,7 +35,7 @@ windows_arch env_omnibus_windows_arch
 
 # Disable git caching
 # ------------------------------
-use_git_caching ENV["GIT_CACHING"] || true
+use_git_caching ENV["GIT_CACHING"]&.downcase == "false" ? false : true || true
 
 # Enable S3 asset caching
 # ------------------------------

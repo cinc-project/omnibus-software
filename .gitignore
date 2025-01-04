@@ -17,3 +17,5 @@ gemtags
 .tags_sorted_by_file
 
 build-jobs.yml
+cache/
+.*swp
