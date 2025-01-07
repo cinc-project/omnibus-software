@@ -86,8 +86,7 @@ build do
     block "copy required windows files" do
       copy_files = %W{
         #{project_dir}/bin/#{bin_dir}/stunnel.exe
-        #{project_dir}/bin/#{bin_dir}/tstunnel.exe
-        #{msys_path}/#{mingw}/bin/libssp-0.dll}
+        #{project_dir}/bin/#{bin_dir}/tstunnel.exe}
 
       copy_files.each do |file|
         if File.exist?(file)
