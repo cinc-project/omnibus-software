@@ -33,7 +33,10 @@ build do
 
   # patchelf was only installed to change the rpath for adoptopenjre binary
   # delete
-  command "find #{install_dir} -name patchelf -exec rm -rf \\{\\} \\;" unless windows?
+  block "Remove patchelf as it's no longer needed" do
+    next unless File.exist?("#{install_dir}/embedded/bin/patchelf")
+    File.delete("#{install_dir}/embedded/bin/patchelf")
+  end
 
   # Remove static object files for all platforms
   # except AIX which uses them at runtime.
