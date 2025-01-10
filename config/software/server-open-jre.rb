@@ -25,7 +25,7 @@ end
 
 license "GPL-2.0 (with the Classpath Exception)"
 
-license_file "http://openjdk.java.net/legal/gplv2+ce.html"
+license_file "https://github.com/adoptium/jdk/raw/refs/heads/master/LICENSE"
 skip_transitive_dependency_licensing true
 
 whitelist_file "jre/bin/javaws"
