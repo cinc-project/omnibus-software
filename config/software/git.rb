@@ -105,6 +105,10 @@ build do
     config_hash["CC_LD_DYNPATH"] = "-R"
     config_hash["AR"] = "ar -X64"
     config_hash["NO_REGEX"] = "YesPlease"
+  elsif ::File.exist?('/etc/alpine-release')
+    config_hash["HAVE_PATHS_H"] = "YesPlease"
+    config_hash["NO_R_TO_GCC_LINKER"] = "YesPlease"
+    config_hash["NO_REGEX"] = "YesPlease"
   else
     # Linux things!
     config_hash["HAVE_PATHS_H"] = "YesPlease"
