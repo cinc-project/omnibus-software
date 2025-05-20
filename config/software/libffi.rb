@@ -15,7 +15,12 @@
 #
 
 name "libffi"
-default_version "3.4.4"
+# MacOS 15 requires newer libffi due to compilation issues
+if macos? && platform_version.satisfies?(">=15")
+  default_version "3.4.8"
+else
+  default_version "3.4.4"
+end
 
 license "MIT"
 license_file "LICENSE"
@@ -23,6 +28,7 @@ skip_transitive_dependency_licensing true
 
 # version_list: url=https://github.com/libffi/libffi/releases  filter=*.tar.gz
 
+version("3.4.8") { source sha256: "bc9842a18898bfacb0ed1252c4febcc7e78fa139fd27fdc7a3e30d9d9356119b" }
 version("3.4.7") { source sha256: "138607dee268bdecf374adf9144c00e839e38541f75f24a1fcf18b78fda48b2d" }
 version("3.4.6") { source sha256: "b0dea9df23c863a7a50e825440f3ebffabd65df1497108e5d437747843895a4e" }
 version("3.4.4") { source sha256: "d66c56ad259a82cf2a9dfc408b32bf5da52371500b84745f7fb8b645712df676" }
