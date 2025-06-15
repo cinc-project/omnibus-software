@@ -20,13 +20,14 @@ license "MPL-2.0"
 license_file "https://www.mozilla.org/media/MPL/2.0/index.815ca599c9df.txt"
 skip_transitive_dependency_licensing true
 
-default_version "2022-10-11"
+default_version "2025-05-20"
 
 source url: "https://curl.se/ca/cacert-#{version}.pem"
 internal_source url: "#{ENV["ARTIFACTORY_REPO_URL"]}/#{name}/cacert-#{version}.pem",
                 authorization: "X-JFrog-Art-Api:#{ENV["ARTIFACTORY_TOKEN"]}"
 
 # versions_list: https://curl.se/docs/caextract.html
+version("2025-05-20") { source sha256: "ab3ee3651977a4178a702b0b828a4ee7b2bbb9127235b0ab740e2e15974bf5db" }
 version("2022-10-11") { source sha256: "2cff03f9efdaf52626bd1b451d700605dc1ea000c5da56bd0fc59f8f43071040" }
 version("2022-07-19") { source sha256: "6ed95025fba2aef0ce7b647607225745624497f876d74ef6ec22b26e73e9de77" }
 version("2022-04-26") { source sha256: "08df40e8f528ed283b0e480ba4bcdbfdd2fdcf695a7ada1668243072d80f8b6f" }
