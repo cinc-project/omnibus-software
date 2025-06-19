@@ -23,6 +23,13 @@ skip_transitive_dependency_licensing true
 arch = "x64"
 msys_dir = "msys64"
 
+version "3.4.4-2" do
+  source url: "https://github.com/oneclick/rubyinstaller2/releases/download/RubyInstaller-#{version}/rubyinstaller-devkit-#{version}-x64.exe",
+          sha256: "9db09beb692d3925cdd62040b05e14805cd14444a229d38b7cb0bf1a525c132a"
+  internal_source url: "#{ENV["ARTIFACTORY_REPO_URL"]}/#{name}/rubyinstaller-devkit-#{version}-x64.exe",
+                  authorization: "X-JFrog-Art-Api:#{ENV["ARTIFACTORY_TOKEN"]}"
+end
+
 version "3.3.0-1" do
   source url: "https://github.com/oneclick/rubyinstaller2/releases/download/RubyInstaller-#{version}/rubyinstaller-devkit-#{version}-x64.exe",
           sha256: "01fc7d7889f161e94ae515c15fc1c22b7db506ab91af891cf7e1a764e96d8298"
@@ -108,6 +115,11 @@ build do
         copy "#{tmpdir}/lib/ruby/site_ruby/3.2.0/ruby_installer.rb", "#{embedded_dir}/lib/ruby/site_ruby/3.2.0"
         copy "#{tmpdir}/lib/ruby/site_ruby/3.2.0/ruby_installer", "#{embedded_dir}/lib/ruby/site_ruby/3.2.0"
         copy "#{tmpdir}/lib/ruby/3.2.0/rubygems/defaults", "#{embedded_dir}/lib/ruby/3.2.0/rubygems/defaults"
+      elsif version.start_with?("3.4")
+        copy "#{tmpdir}/lib/ruby/site_ruby/3.4.0/devkit.rb", "#{embedded_dir}/lib/ruby/site_ruby/3.4.0"
+        copy "#{tmpdir}/lib/ruby/site_ruby/3.4.0/ruby_installer.rb", "#{embedded_dir}/lib/ruby/site_ruby/3.4.0"
+        copy "#{tmpdir}/lib/ruby/site_ruby/3.4.0/ruby_installer", "#{embedded_dir}/lib/ruby/site_ruby/3.4.0"
+        copy "#{tmpdir}/lib/ruby/3.4.0/rubygems/defaults", "#{embedded_dir}/lib/ruby/3.4.0/rubygems/defaults"
       end
 
       # Normally we would symlink the required unix tools.
