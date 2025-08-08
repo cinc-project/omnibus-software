@@ -45,6 +45,7 @@ dependency "ncurses" if freebsd?
 version("3.4.4") { source sha256: "a0597bfdf312e010efd1effaa8d7f1d7833146fdc17950caa8158ffa3dcbfa85" }
 version("3.3.1") { source sha256: "8dc2af2802cc700cd182d5430726388ccf885b3f0a14fcd6a0f21ff249c9aa99" }
 version("3.3.0") { source sha256: "96518814d9832bece92a85415a819d4893b307db5921ae1f0f751a9a89a56b7d" }
+version("3.2.9") { source sha256: "abbad98db9aeb152773b0d35868e50003b8c467f3d06152577c4dfed9d88ed2a" }
 version("3.2.2") { source sha256: "96c57558871a6748de5bc9f274e93f4b5aad06cd8f37befa0e8d94e7b8a423bc" }
 version("3.2.0") { source sha256: "daaa78e1360b2783f98deeceb677ad900f3a36c0ffa6e2b6b19090be77abc272" }
 version("3.1.7") { source sha256: "0556acd69f141ddace03fa5dd8d76e7ea0d8f5232edf012429579bcdaab30e7b" }
