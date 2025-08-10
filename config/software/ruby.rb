@@ -231,8 +231,11 @@ build do
   end
   if version.satisfies?(">=3.3")
     patch source: "ruby-faster-load_33.patch", plevel: 1, env: patch_env
+  end
+  if version.satisfies?("~> 3.4.0")
+    patch source: "ruby-faster-load_34.patch", plevel: 1, env: patch_env
   else
-    if version.satisfies?(">= 2.7")
+    if version.satisfies?("~> 2.7.0")
       patch source: "ruby-faster-load_27.patch", plevel: 1, env: patch_env
     end
   end
