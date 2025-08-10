@@ -43,6 +43,7 @@ dependency "ncurses" if freebsd?
 
 # version_list: url=https://cache.ruby-lang.org/pub/ruby/ filter=*.tar.gz
 version("3.4.4") { source sha256: "a0597bfdf312e010efd1effaa8d7f1d7833146fdc17950caa8158ffa3dcbfa85" }
+version("3.3.9") { source sha256: "d1991690a4e17233ec6b3c7844c1e1245c0adce3e00d713551d0458467b727b1" }
 version("3.3.1") { source sha256: "8dc2af2802cc700cd182d5430726388ccf885b3f0a14fcd6a0f21ff249c9aa99" }
 version("3.3.0") { source sha256: "96518814d9832bece92a85415a819d4893b307db5921ae1f0f751a9a89a56b7d" }
 version("3.2.9") { source sha256: "abbad98db9aeb152773b0d35868e50003b8c467f3d06152577c4dfed9d88ed2a" }
