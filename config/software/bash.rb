@@ -21,7 +21,7 @@ dependency "libiconv"
 dependency "ncurses"
 skip_transitive_dependency_licensing true
 
-# version_list: url=https://ftpmirror.gnu.org/gnu/bash/ filter=*.tar.gz
+# version_list: url=https://ftp.osuosl.org/pub/gnu/bash/ filter=*.tar.gz
 
 version("5.0")    { source sha256: "b4a80f2ac66170b2913efbfb9f2594f1f76c7b1afd11f799e22035d63077fb4d" }
 version("5.1")    { source sha256: "cc012bc860406dcf42f64431bcd3d2fa7560c02915a601aba9cd597a39329baa" }
@@ -34,7 +34,7 @@ version("5.2.15") { source sha256: "13720965b5f4fc3a0d4b61dd37e7565c741da9a5be24
 license "GPL-3.0"
 license_file "COPYING"
 
-source url: "https://ftpmirror.gnu.org/gnu/bash/bash-#{version}.tar.gz"
+source url: "https://ftp.osuosl.org/pub/gnu/bash/bash-#{version}.tar.gz"
 internal_source url: "#{ENV["ARTIFACTORY_REPO_URL"]}/#{name}/#{name}-#{version}.tar.gz",
                 authorization: "X-JFrog-Art-Api:#{ENV["ARTIFACTORY_TOKEN"]}"
 

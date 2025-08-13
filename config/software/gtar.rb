@@ -17,7 +17,7 @@
 name "gtar"
 default_version "1.34"
 
-# version_list: url=https://ftpmirror.gnu.org/gnu/tar/  filter=*.tar.gz
+# version_list: url=https://ftp.osuosl.org/pub/gnu/tar/  filter=*.tar.gz
 version("1.35") { source sha256: "14d55e32063ea9526e057fbf35fcabd53378e769787eff7919c3755b02d2b57e" }
 version("1.34") { source sha256: "03d908cf5768cfe6b7ad588c921c6ed21acabfb2b79b788d1330453507647aed" }
 version("1.33") { source sha256: "7c77c427e8cce274d46a6325d45a55b08e13e2d2d0c9e6c0860a6d2b9589ff0e" }
@@ -28,7 +28,7 @@ version("1.29") { source sha256: "cae466e6e58c7292355e7080248f244db3a4cf755f33f4
 license "GPL-3.0"
 license_file "COPYING"
 
-source url: "https://ftpmirror.gnu.org/gnu/tar/tar-#{version}.tar.gz"
+source url: "https://ftp.osuosl.org/pub/gnu/tar/tar-#{version}.tar.gz"
 internal_source url: "#{ENV["ARTIFACTORY_REPO_URL"]}/#{name}/tar-#{version}.tar.gz",
                 authorization: "X-JFrog-Art-Api:#{ENV["ARTIFACTORY_TOKEN"]}"
 
