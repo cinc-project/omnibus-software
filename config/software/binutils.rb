@@ -25,7 +25,7 @@ license "GPL-3.0"
 license_file "COPYING"
 license_file "COPYING.LIB"
 
-source url: "https://ftp.gnu.org/gnu/binutils/binutils-#{version}.tar.gz"
+source url: "https://ftpmirror.gnu.org/gnu/binutils/binutils-#{version}.tar.gz"
 
 dependency "config_guess"
 

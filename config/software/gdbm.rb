@@ -24,7 +24,7 @@ dependency "config_guess"
 # Version 1.9 and above are GPLv3, do NOT add later versions in
 version("1.8.3") { source md5: "1d1b1d5c0245b1c00aff92da751e9aa1" }
 
-source url: "https://ftp.gnu.org/gnu/gdbm/gdbm-#{version}.tar.gz"
+source url: "https://ftpmirror.gnu.org/gnu/gdbm/gdbm-#{version}.tar.gz"
 
 relative_path "gdbm-#{version}"
 
