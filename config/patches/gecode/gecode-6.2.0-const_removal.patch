@@ -1,0 +1,37 @@
+GCC 14 doesn't like assignments to const members:
+
+In file included from ./gecode/set/int.hh:296,
+                 from gecode/set/cardinality.cpp:39:
+./gecode/set/int/weights.hpp: In member function ‘void Gecode::Set::Int::OverweightValues<I>::init(int, Gecode::SharedArray<int>&, Gecode::SharedArray<int>&, I&)’:
+./gecode/set/int/weights.hpp:127:16: error: no match for ‘operator=’ (operand types are ‘const Gecode::SharedArray<int>’ and ‘Gecode::SharedArray<int>’)
+  127 |     elements = elements0; weights = weights0;
+      |                ^~~~~~~~~
+In file included from ./gecode/kernel.hh:177,
+                 from ./gecode/set.hh:43,
+                 from gecode/set/cardinality.cpp:38:
+./gecode/kernel/data/shared-array.hpp:163:18: note: candidate: ‘Gecode::SharedArray<T>& Gecode::SharedArray<T>::operator=(const Gecode::SharedArray<T>&) [with T = int]’ (near match)
+  163 |     SharedArray& operator =(const SharedArray&) = default;
+      |                  ^~~~~~~~
+./gecode/kernel/data/shared-array.hpp:163:18: note:   passing ‘const Gecode::SharedArray<int>*’ as ‘this’ argument discards qualifiers
+./gecode/set/int/weights.hpp:127:37: error: no match for ‘operator=’ (operand types are ‘const Gecode::SharedArray<int>’ and ‘Gecode::SharedArray<int>’)
+  127 |     elements = elements0; weights = weights0;
+      |                                     ^~~~~~~~
+./gecode/kernel/data/shared-array.hpp:163:18: note: candidate: ‘Gecode::SharedArray<T>& Gecode::SharedArray<T>::operator=(const Gecode::SharedArray<T>&) [with T = int]’ (near match)
+  163 |     SharedArray& operator =(const SharedArray&) = default;
+      |                  ^~~~~~~~
+./gecode/kernel/data/shared-array.hpp:163:18: note:   passing ‘const Gecode::SharedArray<int>*’ as ‘this’ argument discards qualifiers
+
+--- gecode-release-6.2.0/gecode/set/int/weights.hpp.orig	2019-04-10 07:29:50.000000000 -0600
++++ gecode-release-6.2.0/gecode/set/int/weights.hpp	2024-02-06 14:27:05.582559275 -0700
+@@ -49,9 +49,9 @@ namespace Gecode { namespace Set { names
+     /// The value iterator
+     I iter;
+     /// A superset of the elements found in the iterator
+-    const SharedArray<int> elements;
++    SharedArray<int> elements;
+     /// Weights for all the possible elements
+-    const SharedArray<int> weights;
++    SharedArray<int> weights;
+     /// The current index into the elements and weights
+     int index;
+     /// Move to the next element

@@ -47,6 +47,13 @@ build do
     env["CXX"] = "g++44"
   end
 
+  if version.satisfies?("~> 6.2.0")
+    patch source: "gecode-6.2.0-autoconf_builtin.patch", plevel: 1
+    patch source: "gecode-6.2.0-builtin_unreachable.patch", plevel: 1
+    patch source: "gecode-6.2.0-fix_warnings.patch", plevel: 1
+    patch source: "gecode-6.2.0-const_removal.patch", plevel: 1
+  end
+
   command "./configure" \
           " --prefix=#{install_dir}/embedded" \
           " --disable-doc-dot" \

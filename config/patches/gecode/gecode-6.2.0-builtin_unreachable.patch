@@ -1,0 +1,11 @@
+--- gecode-release-6.2.0/gecode/support/macros.hpp.orig	2019-04-10 07:29:50.000000000 -0600
++++ gecode-release-6.2.0/gecode/support/macros.hpp	2021-01-14 11:02:14.412512939 -0700
+@@ -53,7 +53,7 @@
+ 
+ #else
+ 
+-#define GECODE_NEVER assert(false);
++#define GECODE_NEVER __builtin_unreachable();
+ 
+ #endif
+ 

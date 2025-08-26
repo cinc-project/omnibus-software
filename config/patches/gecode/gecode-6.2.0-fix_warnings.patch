@@ -1,0 +1,237 @@
+diff --git a/gecode/flatzinc.hh b/gecode/flatzinc.hh
+index f3cd504a..9b93e5ea 100644
+--- a/gecode/flatzinc.hh
++++ b/gecode/flatzinc.hh
+@@ -413,6 +413,8 @@ namespace Gecode { namespace FlatZinc {
+                unsigned int a, int i, const FloatNumBranch& nl,
+                std::ostream& o) const;
+ #endif
++    /// Assignment operator
++    BranchInformation& operator =(const BranchInformation&) = default;
+   };
+ 
+   /// Uninitialized default random number generator
+diff --git a/gecode/float.hh b/gecode/float.hh
+index 902b62ff..55832a64 100755
+--- a/gecode/float.hh
++++ b/gecode/float.hh
+@@ -930,6 +930,9 @@ namespace Gecode {
+     /// Test whether \a n is contained in domain
+     bool in(const FloatVal& n) const;
+     //@}
++
++    /// Assignment operator
++    FloatVar& operator =(const FloatVar&) = default;
+   };
+ 
+   /**
+@@ -1053,6 +1056,9 @@ namespace Gecode {
+     GECODE_FLOAT_EXPORT
+     FloatVarArray(Space& home, int n, FloatNum min, FloatNum max);
+     //@}
++
++    /// Assignment operator
++    FloatVarArray& operator =(const FloatVarArray&) = default;
+   };
+ 
+ }
+diff --git a/gecode/int.hh b/gecode/int.hh
+index d6e50317..0936e792 100755
+--- a/gecode/int.hh
++++ b/gecode/int.hh
+@@ -456,6 +456,9 @@ namespace Gecode {
+     /// Test whether \a n is contained in domain
+     bool in(int n) const;
+     //@}
++
++    /// Assignment operator
++    IntVar& operator =(const IntVar&) = default;
+   };
+ 
+   /**
+@@ -588,6 +591,9 @@ namespace Gecode {
+     /// Test whether domain is neither zero nor one
+     bool none(void) const;
+     //@}
++
++    /// Assignment operator
++    BoolVar& operator =(const BoolVar&) = default;
+   };
+ 
+   /**
+@@ -699,6 +705,9 @@ namespace Gecode {
+     GECODE_INT_EXPORT
+     IntVarArgs(Space& home, int n, const IntSet& s);
+     //@}
++
++    /// Assignment operator
++    IntVarArgs& operator =(const IntVarArgs&) = default;
+   };
+ 
+   /** \brief Passing Boolean variables
+@@ -799,6 +808,9 @@ namespace Gecode {
+     GECODE_INT_EXPORT
+     IntVarArray(Space& home, int n, const IntSet& s);
+     //@}
++
++    /// Assignment operator
++    IntVarArray& operator =(const IntVarArray&) = default;
+   };
+ 
+   /**
+@@ -831,6 +843,9 @@ namespace Gecode {
+     GECODE_INT_EXPORT
+     BoolVarArray(Space& home, int n, int min, int max);
+     //@}
++
++    /// Assignment operator
++    BoolVarArray& operator =(const BoolVarArray&) = default;
+   };
+ 
+ }
+diff --git a/gecode/kernel/core.cpp b/gecode/kernel/core.cpp
+index 61aae361..4cb5ea40 100755
+--- a/gecode/kernel/core.cpp
++++ b/gecode/kernel/core.cpp
+@@ -523,6 +523,7 @@ namespace Gecode {
+       top->u.med = 0;
+       switch (top->propagate(*this,top_med_o)) {
+       case ES_FIX:
++        break;
+       case __ES_SUBSUMED:
+         break;
+       default:
+diff --git a/gecode/kernel/core.hpp b/gecode/kernel/core.hpp
+index 9d5f73ad..bca2f279 100755
+--- a/gecode/kernel/core.hpp
++++ b/gecode/kernel/core.hpp
+@@ -871,6 +871,8 @@ namespace Gecode {
+     Home(Space& s, Propagator* p=NULL,
+          PropagatorGroup pg=PropagatorGroup::def,
+          BrancherGroup bg=BrancherGroup::def);
++    /// Copy constructor
++    Home(const Home& h);
+     /// Assignment operator
+     Home& operator =(const Home& h);
+     /// Retrieve the space of the home
+@@ -2009,6 +2011,8 @@ namespace Gecode {
+      */
+     GECODE_KERNEL_EXPORT
+     Space(Space& s);
++    /// Assignment operator
++    Space& operator =(const Space& s) = default;
+     /**
+      * \brief Destructor
+      * \ingroup TaskModelScript
+@@ -2298,7 +2302,7 @@ namespace Gecode {
+ 
+ 
+     /**
+-     * \Brief %Propagator \a p is subsumed
++     * \brief %Propagator \a p is subsumed
+      *
+      * First disposes the propagator and then returns subsumption.
+      *
+@@ -3262,6 +3266,9 @@ namespace Gecode {
+   Home::Home(Space& s0, Propagator* p0,
+              PropagatorGroup pg0, BrancherGroup bg0)
+     : s(s0), p(p0), pg(pg0), bg(bg0) {}
++  forceinline
++  Home::Home(const Home& h)
++    : s(h.s), p(h.p), pg(h.pg), bg(h.bg) {}
+   forceinline Home&
+   Home::operator =(const Home& h) {
+     s=h.s; p=h.p; pg=h.pg; bg=h.bg;
+diff --git a/gecode/kernel/data/array.hpp b/gecode/kernel/data/array.hpp
+index 89cdbe04..1cef553a 100755
+--- a/gecode/kernel/data/array.hpp
++++ b/gecode/kernel/data/array.hpp
+@@ -734,6 +734,9 @@ namespace Gecode {
+     friend
+     typename ArrayTraits<ArgArray<T>>::ArgsType
+     operator + <>(const T& x, const ArgArray<T>& y);
++
++    /// Assignment operator
++    ArgArray& operator =(const ArgArray&) = default;
+   };
+ 
+   template<class> class VarArgArray;
+@@ -821,6 +824,9 @@ namespace Gecode {
+     friend
+     typename ArrayTraits<VarArgArray<Var>>::ArgsType
+     operator + <>(const Var& x, const VarArgArray<Var>& y);
++
++    /// Assignment operator
++    VarArgArray& operator =(const VarArgArray&) = default;
+   };
+ 
+ 
+diff --git a/gecode/kernel/data/shared-array.hpp b/gecode/kernel/data/shared-array.hpp
+index 853e2ea3..eeef02bd 100755
+--- a/gecode/kernel/data/shared-array.hpp
++++ b/gecode/kernel/data/shared-array.hpp
+@@ -158,6 +158,9 @@ namespace Gecode {
+     /// Return a reverse and read-only iterator past the beginning of the array
+     const_reverse_iterator rend(void) const;
+     //@}
++
++    /// Assignment operator
++    SharedArray& operator =(const SharedArray&) = default;
+   };
+ 
+   /**
+diff --git a/gecode/search/seq/pbs.hh b/gecode/search/seq/pbs.hh
+index cc228112..d56d1fde 100644
+--- a/gecode/search/seq/pbs.hh
++++ b/gecode/search/seq/pbs.hh
+@@ -71,6 +71,12 @@ namespace Gecode { namespace Search { namespace Seq {
+     /// Stop object
+     Stop* stop;
+   public:
++    /// Default constructor
++    Slave(void);
++    /// Copy constructor
++    Slave(const Slave& s) = default;
++    /// Assigment operator
++    Slave& operator =(const Slave& s) = default;
+     /// Initialize with slave \a s and its stop object \a so
+     void init(Engine* s, Stop* so);
+     /// Return next solution
+diff --git a/gecode/search/seq/pbs.hpp b/gecode/search/seq/pbs.hpp
+index 6762b126..7467cfd1 100755
+--- a/gecode/search/seq/pbs.hpp
++++ b/gecode/search/seq/pbs.hpp
+@@ -45,6 +45,9 @@ namespace Gecode { namespace Search { namespace Seq {
+   }
+ 
+ 
++  forceinline
++  Slave::Slave(void)
++    : slave(nullptr), stop(nullptr) {}
+   forceinline void
+   Slave::init(Engine* e, Stop* s) {
+     slave = e; stop = s;
+diff --git a/gecode/set.hh b/gecode/set.hh
+index cb0e19b5..5eb5d4ee 100755
+--- a/gecode/set.hh
++++ b/gecode/set.hh
+@@ -258,6 +258,9 @@ namespace Gecode {
+     /// Test whether \a i is not in the least upper bound
+     bool notContains(int i) const;
+     //@}
++
++    /// Assignment operator
++    SetVar& operator =(const SetVar&) = default;
+   };
+ 
+   /**
+@@ -621,6 +624,9 @@ namespace Gecode {
+                 unsigned int minCard = 0,
+                 unsigned int maxCard = Set::Limits::card);
+     //@}
++
++    /// Assignment operator
++    SetVarArray& operator =(const SetVarArray&) = default;
+   };
+ 
+ }

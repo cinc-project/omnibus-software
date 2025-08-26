@@ -1,0 +1,25 @@
+--- gecode-release-6.2.0/gecode.m4.orig	2019-04-10 07:29:50.000000000 -0600
++++ gecode-release-6.2.0/gecode.m4	2021-01-14 09:53:01.873415200 -0700
+@@ -661,12 +661,16 @@ AC_DEFUN([AC_GECODE_GCC_GENERAL_SWITCHES
+   AC_GECODE_CHECK_CXXFLAG(-ggdb,
+      AC_GECODE_ADD_TO_COMPILERFLAGS(-ggdb),
+      AC_GECODE_CHECK_COMPILERFLAG(-g))
+-  AC_CHECK_FUNC([__builtin_ffsll],
+-    [AC_DEFINE([GECODE_HAS_BUILTIN_FFSLL],[],
+-      [whether __builtin_ffsll is available])])
+-  AC_CHECK_FUNC([__builtin_popcountll],
+-    [AC_DEFINE([GECODE_HAS_BUILTIN_POPCOUNTLL],[],
+-      [whether __builtin_popcountll is available])])
++  AX_GCC_BUILTIN([__builtin_ffsll])
++  if test "$ax_cv_have___builtin_ffsll" = "yes"; then
++    AC_DEFINE([GECODE_HAS_BUILTIN_FFSLL],[1],
++      [whether __builtin_ffsll is available])
++  fi
++  AX_GCC_BUILTIN([__builtin_popcountll])
++  if test "$ax_cv_have___builtin_popcountll" = "yes"; then
++    AC_DEFINE([GECODE_HAS_BUILTIN_POPCOUNTLL],[1],
++      [whether __builtin_popcountll is available])
++  fi
+ 
+   AC_SUBST(docdir, "${datadir}/doc/gecode")
+ 
