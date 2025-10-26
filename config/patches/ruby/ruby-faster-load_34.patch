@@ -1,0 +1,12 @@
+diff -ur ruby-3.4.4/load.c ruby-3.4.4-new/load.c
+--- ruby-3.4.4/load.c	2025-05-13 20:11:06.000000000 -0700
++++ ruby-3.4.4-new/load.c	2025-06-20 08:31:53.864829350 -0700
+@@ -778,7 +778,7 @@
+             ast = rb_ruby_ast_data_get(ast_value);
+ 
+             iseq = rb_iseq_new_top(ast_value, rb_fstring_lit("<top (required)>"),
+-                                   fname, realpath_internal_cached(realpath_map, fname), NULL);
++                                   fname, fname, NULL);
+             rb_ast_dispose(ast);
+         }
+ 
