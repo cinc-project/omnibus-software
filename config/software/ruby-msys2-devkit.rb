@@ -23,6 +23,13 @@ skip_transitive_dependency_licensing true
 arch = "x64"
 msys_dir = "msys64"
 
+version "3.4.7-1" do
+  source url: "https://github.com/oneclick/rubyinstaller2/releases/download/RubyInstaller-#{version}/rubyinstaller-devkit-#{version}-x64.exe",
+          sha256: "994bdb9acce25b1a9f5d9f30cde8bba60e28a239f252ac6f3a6c9510a43e13f6"
+  internal_source url: "#{ENV["ARTIFACTORY_REPO_URL"]}/#{name}/rubyinstaller-devkit-#{version}-x64.exe",
+                  authorization: "X-JFrog-Art-Api:#{ENV["ARTIFACTORY_TOKEN"]}"
+end
+
 version "3.4.4-2" do
   source url: "https://github.com/oneclick/rubyinstaller2/releases/download/RubyInstaller-#{version}/rubyinstaller-devkit-#{version}-x64.exe",
           sha256: "9db09beb692d3925cdd62040b05e14805cd14444a229d38b7cb0bf1a525c132a"

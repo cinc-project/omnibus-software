@@ -42,6 +42,7 @@ dependency "libyaml"
 dependency "ncurses" if freebsd?
 
 # version_list: url=https://cache.ruby-lang.org/pub/ruby/ filter=*.tar.gz
+version("3.4.7") { source sha256: "23815a6d095696f7919090fdc3e2f9459b2c83d57224b2e446ce1f5f7333ef36" }
 version("3.4.4") { source sha256: "a0597bfdf312e010efd1effaa8d7f1d7833146fdc17950caa8158ffa3dcbfa85" }
 version("3.3.9") { source sha256: "d1991690a4e17233ec6b3c7844c1e1245c0adce3e00d713551d0458467b727b1" }
 version("3.3.1") { source sha256: "8dc2af2802cc700cd182d5430726388ccf885b3f0a14fcd6a0f21ff249c9aa99" }
