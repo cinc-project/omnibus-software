@@ -192,7 +192,7 @@ build do
     if rhel? && platform_version.satisfies?(">=7")
       if version.satisfies?("= 3.1.4")
         patch source: "ruby-3.1.4-configure.patch", plevel: 1, env: patch_env
-      elsif version.satisfies?(">= 3.1.6")
+      elsif version.satisfies?(">= 3.1.6") && version.satisfies?("< 3.4.0")
         patch source: "ruby-3.1.6-configure.patch", plevel: 1, env: patch_env
       end
     end
