@@ -1,0 +1,12 @@
+diff -ur ruby-3.4.7/ext/win32/lib/win32/registry.rb ruby-3.4.7-new/ext/win32/lib/win32/registry.rb
+--- ruby-3.4.7/ext/win32/lib/win32/registry.rb  2025-10-07 09:42:48.000000000 -0700
++++ ruby-3.4.7-new/ext/win32/lib/win32/registry.rb      2025-10-30 13:21:53.502486926 -0700
+@@ -918,7 +918,7 @@
+ 
+     private
+ 
+-    def export_string(str, enc = Encoding.default_internal || LOCALE) # :nodoc:
++    def export_string(str, enc = Encoding.default_internal || "utf-8") # :nodoc:
+       str.encode(enc)
+     end
+   end

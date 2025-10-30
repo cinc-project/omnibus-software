@@ -161,17 +161,21 @@ build do
   # Here we patch the Ruby Win32/Reolv.rb file to make reloading the Win32::Registry class
   # conditional and therefore prevent the monkeypatch from being overwritten.
 
-  if windows? && version.satisfies?("~> 3.0.0") && version.satisfies?("< 3.4.0")
+  if windows? && version.satisfies?("~> 3.0.0")
     patch source: "ruby-win32_resolv.patch", plevel: 0, env: patch_env
   elsif windows? && version.satisfies?(">= 3.4.0")
-    patch source: "ruby-win32_resolv_34.patch", plevel: 1, env: patch_env
   end
 
   # Prior to Chef-18, we had been monkeypatching the registry.rb to solve a registry encoding
   # problem. We had to move that patch here. We also patch the resolv class here as insurance.
-  if windows? && version.satisfies?("~> 3.1")
+  if windows? && version.satisfies?("~> 3.1.0")
     patch source: "ruby-win32_registry.patch", plevel: 1, env: patch_env
     patch source: "ruby-win32_resolv.patch", plevel: 0, env: patch_env
+  end
+
+  if windows? && version.satisfies?("~> 3.4")
+    patch source: "ruby-win32_registry_34.patch", plevel: 1, env: patch_env
+    patch source: "ruby-win32_resolv_34.patch", plevel: 1, env: patch_env
   end
 
   if suse? && version.satisfies?("= 3.1.4")
