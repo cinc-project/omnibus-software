@@ -164,7 +164,7 @@ build do
   if windows? && version.satisfies?("~> 3.0.0") && version.satisfies?("< 3.4.0")
     patch source: "ruby-win32_resolv.patch", plevel: 0, env: patch_env
   elsif windows? && version.satisfies?(">= 3.4.0")
-    patch source: "ruby-win32_resolv_34.patch", plevel: 0, env: patch_env
+    patch source: "ruby-win32_resolv_34.patch", plevel: 1, env: patch_env
   end
 
   # Prior to Chef-18, we had been monkeypatching the registry.rb to solve a registry encoding
