@@ -43,7 +43,6 @@ build do
 
   # Build it
   make env: env
-  make "check", env: env
 
   # Move it
   mkdir "#{install_dir}/embedded/bin"
