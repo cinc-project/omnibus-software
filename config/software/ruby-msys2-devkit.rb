@@ -32,7 +32,7 @@ end
 
 version "3.4.4-2" do
   source url: "https://github.com/oneclick/rubyinstaller2/releases/download/RubyInstaller-#{version}/rubyinstaller-devkit-#{version}-x64.exe",
-          sha256: "9db09beb692d3925cdd62040b05e14805cd14444a229d38b7cb0bf1a525c132a"
+          sha256: "013aed0f658cd7139eec56bed861e246f17707b8501891a2be3a93f833bb858e"
   internal_source url: "#{ENV["ARTIFACTORY_REPO_URL"]}/#{name}/rubyinstaller-devkit-#{version}-x64.exe",
                   authorization: "X-JFrog-Art-Api:#{ENV["ARTIFACTORY_TOKEN"]}"
 end
