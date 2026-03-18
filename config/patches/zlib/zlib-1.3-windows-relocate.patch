@@ -1,0 +1,20 @@
+--- a/win32/Makefile.gcc
++++ b/win32/Makefile.gcc
+@@ -50,6 +50,8 @@
+ RC = $(PREFIX)windres
+ RCFLAGS =
+ 
++IMAGE_BASE = 0x63300000
++
+ STRIP = $(PREFIX)strip
+ 
+ CP = cp -fp
+@@ -86,7 +88,7 @@
+ $(IMPLIB): $(SHAREDLIB)
+ 
+ $(SHAREDLIB): win32/zlib.def $(OBJS) $(OBJA) zlibrc.o
+-	$(CC) -shared -static-libgcc -Wl,--out-implib,$(IMPLIB) $(LDFLAGS) \
++	$(CC) -shared -static-libgcc -Wl,--out-implib,$(IMPLIB),--image-base,$(IMAGE_BASE) $(LDFLAGS) \
+ 	-o $@ win32/zlib.def $(OBJS) $(OBJA) zlibrc.o
+ 	$(STRIP) $@
+ 
