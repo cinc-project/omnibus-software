@@ -15,7 +15,7 @@
 #
 
 name "libtool"
-default_version "2.4.7"
+default_version "2.5.4"
 
 license "GPL-2.0"
 license_file "COPYING"
