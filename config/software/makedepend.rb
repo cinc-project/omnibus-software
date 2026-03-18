@@ -15,7 +15,7 @@
 #
 
 name "makedepend"
-default_version "1.0.8"
+default_version "1.0.9"
 
 license "MIT"
 license_file "COPYING"
