@@ -15,13 +15,20 @@
 #
 
 name "ruby-msys2-devkit"
-default_version "3.0.6-1"
+default_version "3.4.9-1"
 
 license "BSD-3-Clause"
 license_file "https://raw.githubusercontent.com/oneclick/rubyinstaller2/master/LICENSE.txt"
 skip_transitive_dependency_licensing true
 arch = "x64"
 msys_dir = "msys64"
+
+version "3.4.9-1" do
+  source url: "https://github.com/oneclick/rubyinstaller2/releases/download/RubyInstaller-#{version}/rubyinstaller-devkit-#{version}-x64.exe",
+          sha256: "39632975220ff43133244d8b8b8774feb0d301b33d11394513df28cb1853c36d"
+  internal_source url: "#{ENV["ARTIFACTORY_REPO_URL"]}/#{name}/rubyinstaller-devkit-#{version}-x64.exe",
+                  authorization: "X-JFrog-Art-Api:#{ENV["ARTIFACTORY_TOKEN"]}"
+end
 
 version "3.4.7-1" do
   source url: "https://github.com/oneclick/rubyinstaller2/releases/download/RubyInstaller-#{version}/rubyinstaller-devkit-#{version}-x64.exe",
