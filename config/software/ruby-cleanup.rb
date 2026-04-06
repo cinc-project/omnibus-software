@@ -35,6 +35,7 @@ build do
   # delete
   block "Remove patchelf as it's no longer needed" do
     next unless File.exist?("#{install_dir}/embedded/bin/patchelf")
+
     File.delete("#{install_dir}/embedded/bin/patchelf")
   end
 

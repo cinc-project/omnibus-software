@@ -5,15 +5,50 @@ stages:
   - test
   - generate
   - trigger
-  - build
+  - release
+  - check
 
 workflow:
   rules:
-    # Run if we trigger a pipeline from the web
     - if: $CI_PIPELINE_SOURCE == "web"
-    # Run if this is a merge request
     - if: $CI_MERGE_REQUEST_ID
+    - if: $CI_COMMIT_BRANCH == "stable/cinc" && $CI_PIPELINE_SOURCE == "push"
+    - if: $CI_PIPELINE_SOURCE == "schedule"
 
+# ---------------------------------------------------------------------------
+# Templates
+# ---------------------------------------------------------------------------
+.ruby-test:
+  stage: test
+  tags:
+    - docker-x86_64
+  script:
+    - export LANG=C.UTF-8
+    - bundle config set --local path bundle/vendor
+    - bundle install --jobs=7 --retry=3
+    - bundle exec rake
+  rules:
+    - if: $CI_MERGE_REQUEST_ID
+    - if: $CI_PIPELINE_SOURCE == "web"
+
+# ---------------------------------------------------------------------------
+# Lint & test matrix (Ruby 3.2, 3.3, 3.4)
+# ---------------------------------------------------------------------------
+test:ruby-3.2:
+  extends: .ruby-test
+  image: ruby:3.2
+
+test:ruby-3.3:
+  extends: .ruby-test
+  image: ruby:3.3
+
+test:ruby-3.4:
+  extends: .ruby-test
+  image: ruby:3.4
+
+# ---------------------------------------------------------------------------
+# MR build verification — dynamic child pipeline for changed software
+# ---------------------------------------------------------------------------
 generate-builds:
   stage: generate
   tags:
@@ -24,38 +59,9 @@ generate-builds:
   artifacts:
     paths:
       - build-jobs.yml
-
-test:ruby-3.0:
-  stage: test
-  image: ruby:3.0
-  tags:
-    - docker-x86_64
-  script:
-    - .expeditor/run_linux_tests.sh rake
-
-test:ruby-3.1:
-  stage: test
-  image: ruby:3.1
-  tags:
-    - docker-x86_64
-  script:
-    - .expeditor/run_linux_tests.sh rake
-
-test:ruby-3.2:
-  stage: test
-  image: ruby:3.2
-  tags:
-    - docker-x86_64
-  script:
-    - .expeditor/run_linux_tests.sh rake
-
-test:ruby-3.3:
-  stage: test
-  image: ruby:3.3
-  tags:
-    - docker-x86_64
-  script:
-    - .expeditor/run_linux_tests.sh rake
+  rules:
+    - if: $CI_MERGE_REQUEST_ID
+    - if: $CI_PIPELINE_SOURCE == "web"
 
 trigger-builds:
   stage: trigger
@@ -64,3 +70,74 @@ trigger-builds:
       - artifact: build-jobs.yml
         job: generate-builds
     strategy: depend
+  rules:
+    - if: $CI_MERGE_REQUEST_ID
+    - if: $CI_PIPELINE_SOURCE == "web"
+
+# ---------------------------------------------------------------------------
+# Nightly — build ALL non-deprecated software (scheduled pipeline)
+# ---------------------------------------------------------------------------
+generate-nightly-builds:
+  stage: generate
+  tags:
+    - docker-x86_64
+  script:
+    - source /home/omnibus/load-omnibus-toolchain.sh
+    - ./test/generate_gitlab_jobs.rb --all
+  artifacts:
+    paths:
+      - build-jobs.yml
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule" && $SCHEDULE_TYPE == "nightly"
+
+trigger-nightly-builds:
+  stage: trigger
+  trigger:
+    include:
+      - artifact: build-jobs.yml
+        job: generate-nightly-builds
+    strategy: depend
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule" && $SCHEDULE_TYPE == "nightly"
+
+# ---------------------------------------------------------------------------
+# Post-merge release — bump version, tag, publish gem
+# ---------------------------------------------------------------------------
+bump-version:
+  stage: release
+  image: ruby:3.3
+  tags:
+    - docker-x86_64
+  script:
+    - ./scripts/bump_version.sh
+  rules:
+    - if: $CI_COMMIT_BRANCH == "stable/cinc" && $CI_PIPELINE_SOURCE == "push"
+
+publish-gem:
+  stage: release
+  image: ruby:3.3
+  tags:
+    - docker-x86_64
+  needs: [bump-version]
+  script:
+    - gem build omnibus-software.gemspec
+    - gem push --host https://rubygems.cinc.sh omnibus-software-*.gem
+  rules:
+    - if: $CI_COMMIT_BRANCH == "stable/cinc" && $CI_PIPELINE_SOURCE == "push"
+
+# ---------------------------------------------------------------------------
+# Scheduled — check for upstream software version updates
+# ---------------------------------------------------------------------------
+check-upstream-versions:
+  stage: check
+  image: ruby:3.3
+  tags:
+    - docker-x86_64
+  script:
+    - ruby scripts/check_upstream_versions.rb
+  artifacts:
+    paths:
+      - version_report.json
+    expire_in: 1 week
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule" && $SCHEDULE_TYPE == "version_check"

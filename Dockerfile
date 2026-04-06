@@ -1,4 +1,4 @@
-FROM ubuntu:18.04
+FROM debian:latest
 
 RUN apt-get update -y -q && apt-get install -y \
       autoconf \
@@ -13,7 +13,6 @@ RUN apt-get update -y -q && apt-get install -y \
       flex \
       gettext \
       gnupg \
-      ncurses-dev \
       ncurses-dev \
       wget \
       zlib1g-dev
