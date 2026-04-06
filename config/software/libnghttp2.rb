@@ -15,7 +15,7 @@
 #
 
 name "libnghttp2"
-default_version "1.58.0"
+default_version "1.68.1"
 
 dependency "openssl"
 
