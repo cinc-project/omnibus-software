@@ -19,7 +19,7 @@
 
 name "patchelf"
 
-default_version "0.13.1" # version greater than 0.13.1 require C++17 compiler to build
+default_version "0.18.0" # version greater than 0.13.1 require C++17 compiler to build
 
 license :project_license
 
