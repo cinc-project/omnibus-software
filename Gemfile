@@ -7,4 +7,6 @@ group :development, :test do
   gem "rake"
   gem "chefstyle"
   gem "ohai"
+  gem "rspec", "~> 3.0"
+  gem "webmock", "~> 3.0"
 end

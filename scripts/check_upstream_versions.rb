@@ -351,9 +351,10 @@ def create_version_update_mr(update)
 end
 
 # ---------------------------------------------------------------------------
-# Main
+# Main (only runs when executed directly, not when required by specs)
 # ---------------------------------------------------------------------------
-filter = ARGV.first
+if __FILE__ == $PROGRAM_NAME
+  filter = ARGV.first
 
 puts "Loading software definitions via omnibus..."
 
@@ -439,3 +440,4 @@ elsif updates.any?
   puts "Updated #{updates.length} software definition(s) locally."
   puts "Not in CI (no CI_JOB_TOKEN/CI_PROJECT_ID), skipping MR creation."
 end
+end # if __FILE__ == $PROGRAM_NAME
