@@ -15,7 +15,7 @@
 #
 
 name "gecode"
-default_version "3.7.3"
+default_version "6.2.0"
 
 license "MIT"
 license_file "LICENSE"
