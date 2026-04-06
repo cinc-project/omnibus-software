@@ -15,7 +15,7 @@
 #
 
 name "logrotate"
-default_version "3.21.0"
+default_version "3.22.0"
 
 license "GPL-2.0"
 license_file "COPYING"
