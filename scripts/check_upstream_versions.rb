@@ -263,9 +263,10 @@ def create_merge_request(source_branch, title, description)
 end
 
 # ---------------------------------------------------------------------------
-# Update a software definition file with new default_version
+# Update a software definition file with new default_version.
+# Returns the updated content string without writing to disk.
 # ---------------------------------------------------------------------------
-def update_default_version(file, old_version, new_version)
+def updated_default_version_content(file, old_version, new_version)
   content = File.read(file)
   updated = content.sub(
     /^(default_version\s+["'])#{Regexp.escape(old_version)}(["'])/,
@@ -278,6 +279,18 @@ def update_default_version(file, old_version, new_version)
   end
 
   updated
+end
+
+# ---------------------------------------------------------------------------
+# Update default_version in the local software definition file on disk.
+# ---------------------------------------------------------------------------
+def update_local_file(name, old_version, new_version)
+  file_path = File.join(OmnibusSoftware.root, "config", "software", "#{name}.rb")
+  new_content = updated_default_version_content(file_path, old_version, new_version)
+  return false unless new_content
+
+  File.write(file_path, new_content)
+  true
 end
 
 # ---------------------------------------------------------------------------
@@ -297,7 +310,7 @@ def create_version_update_mr(update)
 
   file_path = "config/software/#{name}.rb"
   full_path = File.join(OmnibusSoftware.root, file_path)
-  new_content = update_default_version(full_path, current, latest)
+  new_content = updated_default_version_content(full_path, current, latest)
   return unless new_content
 
   puts "  Creating branch #{branch_name}"
@@ -382,6 +395,11 @@ Dir.glob(OmnibusSoftware.root.join("config/software/*.rb")).sort.each do |filepa
   update = check_for_update(sw_name, strategy, current_version)
   if update
     puts " UPDATE AVAILABLE: #{update[:current]} -> #{update[:latest]}"
+    unless DRY_RUN
+      if update_local_file(sw_name, update[:current], update[:latest])
+        puts "  Updated config/software/#{sw_name}.rb"
+      end
+    end
     updates << update
   else
     puts " up to date (#{current_version})"
@@ -414,9 +432,10 @@ if updates.any? && CI_JOB_TOKEN && CI_PROJECT_ID && !DRY_RUN
   end
 elsif updates.any? && DRY_RUN
   puts ""
-  puts "DRY_RUN=true, skipping MR creation. Updates that would be proposed:"
+  puts "DRY_RUN=true, no files modified. Updates that would be applied:"
   updates.each { |u| puts "  #{u[:name]}: #{u[:current]} -> #{u[:latest]}" }
 elsif updates.any?
   puts ""
-  puts "Not in CI (no CI_JOB_TOKEN/CI_PROJECT_ID). Run in GitLab CI to create MRs."
+  puts "Updated #{updates.length} software definition(s) locally."
+  puts "Not in CI (no CI_JOB_TOKEN/CI_PROJECT_ID), skipping MR creation."
 end
