@@ -134,7 +134,9 @@ check-upstream-versions:
   tags:
     - docker-x86_64
   script:
-    - ruby scripts/check_upstream_versions.rb
+    - bundle config set --local path bundle/vendor
+    - bundle install --jobs=7 --retry=3
+    - bundle exec ruby scripts/check_upstream_versions.rb
   artifacts:
     paths:
       - version_report.json
