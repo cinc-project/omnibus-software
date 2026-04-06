@@ -17,7 +17,7 @@
 
 # We use the version in util-linux, and only build the libuuid subdirectory
 name "libsodium"
-default_version "1.0.18"
+default_version "1.0.21-RELEASE"
 
 license "ISC"
 license_file "LICENSE"
