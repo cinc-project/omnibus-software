@@ -2,13 +2,17 @@
 #
 # check_upstream_versions.rb
 #
-# Uses the omnibus gem to load software definitions from config/software/,
-# checks upstream sources for newer versions, and auto-creates GitLab merge
-# requests when updates are found.
+# Loads software definitions via the omnibus gem, auto-detects upstream
+# sources from their download URLs, checks for newer versions, and
+# auto-creates GitLab merge requests when updates are found.
+#
+# Most GitHub and HTTP directory sources are auto-detected from the source
+# URL in each software definition. SOURCE_OVERRIDES handles the few cases
+# where the check URL or strategy differs from what can be inferred.
 #
 # Usage:
-#   ruby scripts/check_upstream_versions.rb            # check all
-#   ruby scripts/check_upstream_versions.rb openssl    # check specific software
+#   bundle exec ruby scripts/check_upstream_versions.rb            # check all
+#   bundle exec ruby scripts/check_upstream_versions.rb openssl    # check specific
 #
 # Environment:
 #   CI_JOB_TOKEN   - GitLab token for creating MRs (set by CI)
@@ -21,7 +25,6 @@ require "net/http"
 require "uri"
 require "json"
 
-# Load the omnibus-software library which provides OmnibusSoftware.for_each_software
 $LOAD_PATH.unshift File.expand_path("../lib", __dir__)
 require "omnibus-software"
 
@@ -31,13 +34,45 @@ CI_SERVER_URL = ENV["CI_SERVER_URL"] || "https://gitlab.com"
 DRY_RUN = ENV["DRY_RUN"] == "true"
 DEFAULT_BRANCH = "stable/cinc"
 
-# Suppress omnibus logging noise
 Omnibus.logger.level = :fatal
+
+DEPRECATED_COMMENT = "# expeditor/ignore: deprecated".freeze
+
+# ---------------------------------------------------------------------------
+# Source overrides for software where the check strategy can't be
+# auto-derived from source[:url]. Most GitHub and HTTP directory sources
+# are auto-detected. Only override when the check differs from download.
+# ---------------------------------------------------------------------------
+SOURCE_OVERRIDES = {
+  # Non-GitHub downloads that should check via GitHub tags
+  "libsodium" => { type: :github, owner: "jedisct1", repo: "libsodium", prefix: "" },
+  "liblzma" => { type: :github, owner: "tukaani-project", repo: "xz", prefix: "v" },
+  # GitHub tags use underscores (R_2_6_4) instead of dots in version
+  "expat" => { type: :github, owner: "libexpat", repo: "libexpat", prefix: "R_", version_separator: "_" },
+  # Check URL or pattern differs from download URL
+  "openssl" => { type: :http, url: "https://openssl-library.org/source/", pattern: /openssl-(3\.\d+\.\d+)\.tar\.gz/ },
+  "curl" => { type: :http, url: "https://curl.se/download/", pattern: /curl-(\d+\.\d+\.\d+)\.tar\.gz/ },
+  "bzip2" => { type: :http, url: "https://sourceware.org/pub/bzip2/", pattern: /bzip2-(\d+\.\d+\.\d+)\.tar\.gz/ },
+  "ruby" => { type: :http, url: "https://cache.ruby-lang.org/pub/ruby/3.4/", pattern: /ruby-(3\.4\.\d+)\.tar\.gz/ },
+  "cacerts" => { type: :http, url: "https://curl.se/ca/", pattern: /cacert-(\d{4}-\d{2}-\d{2})\.pem/ },
+  "pcre" => { type: :http, url: "https://sourceforge.net/projects/pcre/files/pcre/", pattern: %r{/pcre/(\d+\.\d+)/} },
+  # GNOME: version discovery via cache.json rather than directory listing
+  "libxml2" => { type: :http, url: "https://download.gnome.org/sources/libxml2/cache.json", pattern: /(\d+\.\d+\.\d+)/ },
+  "libxslt" => { type: :http, url: "https://download.gnome.org/sources/libxslt/cache.json", pattern: /(\d+\.\d+\.\d+)/ },
+}.freeze
+
+# Software to skip (binary downloads, platform-specific, not meaningful to check)
+SKIP_VERSION_CHECK = %w[
+  server-open-jre ruby-msys2-devkit ruby-windows-devkit ruby-windows-devkit-bash
+  nodejs-binary ibm-jre jre-from-jdk
+  elasticsearch opensearch openssl-fips
+  go
+].freeze
 
 # ---------------------------------------------------------------------------
 # GitHub: fetch tags and find highest semver
 # ---------------------------------------------------------------------------
-def check_github_tags(owner, repo, prefix: "v")
+def check_github_tags(owner, repo, prefix: "v", version_separator: ".")
   uri = URI("https://api.github.com/repos/#{owner}/#{repo}/tags?per_page=100")
   req = Net::HTTP::Get.new(uri)
   req["Accept"] = "application/vnd.github.v3+json"
@@ -49,6 +84,7 @@ def check_github_tags(owner, repo, prefix: "v")
   tags = JSON.parse(resp.body).map { |t| t["name"] }
   versions = tags.filter_map do |tag|
     cleaned = tag.sub(/^#{Regexp.escape(prefix)}/, "")
+    cleaned = cleaned.tr(version_separator, ".") if version_separator != "."
     begin
       Gem::Version.new(cleaned)
       cleaned
@@ -90,64 +126,72 @@ rescue StandardError => e
 end
 
 # ---------------------------------------------------------------------------
-# Mapping: software name -> how to check for updates
+# Auto-detect check strategy from a software's source URL
 # ---------------------------------------------------------------------------
-GITHUB_SOURCES = {
-  "libarchive" => { owner: "libarchive", repo: "libarchive", prefix: "v" },
-  "libffi" => { owner: "libffi", repo: "libffi", prefix: "v" },
-  "libsodium" => { owner: "jedisct1", repo: "libsodium", prefix: "" },
-  "libxcrypt" => { owner: "besser82", repo: "libxcrypt", prefix: "v" },
-  "libzmq" => { owner: "zeromq", repo: "libzmq", prefix: "v" },
-  "libnghttp2" => { owner: "nghttp2", repo: "nghttp2", prefix: "v" },
-  "expat" => { owner: "libexpat", repo: "libexpat", prefix: "R_" },
-  "logrotate" => { owner: "logrotate", repo: "logrotate" },
-  "patchelf" => { owner: "NixOS", repo: "patchelf" },
-  "erlang" => { owner: "erlang", repo: "otp", prefix: "OTP-" },
-  "keydb" => { owner: "Snapchat", repo: "KeyDB", prefix: "v" },
-  "valkey" => { owner: "valkey-io", repo: "valkey" },
-}.freeze
+def infer_github_prefix(url, version)
+  tag = nil
+  if url =~ %r{/releases/download/([^/]+)/}
+    tag = $1
+  elsif url =~ %r{/archive/(?:refs/tags/)?([^/]+)\.tar}
+    tag = $1
+  end
+  return "v" unless tag
 
-HTTP_SOURCES = {
-  "openssl" => { url: "https://openssl-library.org/source/", pattern: /openssl-(3\.\d+\.\d+)\.tar\.gz/ },
-  "curl" => { url: "https://curl.se/download/", pattern: /curl-(\d+\.\d+\.\d+)\.tar\.gz/ },
-  "ruby" => { url: "https://cache.ruby-lang.org/pub/ruby/3.4/", pattern: /ruby-(3\.4\.\d+)\.tar\.gz/ },
-  "git" => { url: "https://www.kernel.org/pub/software/scm/git/", pattern: /git-(\d+\.\d+\.\d+)\.tar\.gz/ },
-  "zlib" => { url: "https://zlib.net/fossils/", pattern: /zlib-(\d+\.\d+\.\d+)\.tar\.gz/ },
-  "libyaml" => { url: "https://pyyaml.org/download/libyaml/", pattern: /yaml-(\d+\.\d+\.\d+)\.tar\.gz/ },
-  "ncurses" => { url: "https://ftp.osuosl.org/pub/gnu/ncurses/", pattern: /ncurses-(\d+\.\d+)\.tar\.gz/ },
-  "libiconv" => { url: "https://ftp.osuosl.org/pub/gnu/libiconv/", pattern: /libiconv-(\d+\.\d+)\.tar\.gz/ },
-  "libtool" => { url: "https://ftp.osuosl.org/pub/gnu/libtool/", pattern: /libtool-(\d+\.\d+\.\d+)\.tar\.gz/ },
-  "gmp" => { url: "https://ftp.osuosl.org/pub/gnu/gmp/", pattern: /gmp-(\d+\.\d+\.\d+)\.tar\.bz2/ },
-  "bash" => { url: "https://ftp.osuosl.org/pub/gnu/bash/", pattern: /bash-(\d+\.\d+[\.\d]*)\.tar\.gz/ },
-  "make" => { url: "https://ftp.osuosl.org/pub/gnu/make/", pattern: /make-(\d+\.\d+[\.\d]*)\.tar\.gz/ },
-  "gtar" => { url: "https://ftp.osuosl.org/pub/gnu/tar/", pattern: /tar-(\d+\.\d+[\.\d]*)\.tar\.gz/ },
-  "bzip2" => { url: "https://sourceware.org/pub/bzip2/", pattern: /bzip2-(\d+\.\d+\.\d+)\.tar\.gz/ },
-  "pcre" => { url: "https://sourceforge.net/projects/pcre/files/pcre/", pattern: /(\d+\.\d+)/ },
-  "liblzma" => { url: "https://github.com/tukaani-project/xz/releases", pattern: /v(\d+\.\d+\.\d+)/ },
-  "libxml2" => { url: "https://download.gnome.org/sources/libxml2/cache.json", pattern: /(\d+\.\d+\.\d+)/ },
-  "libxslt" => { url: "https://download.gnome.org/sources/libxslt/cache.json", pattern: /(\d+\.\d+\.\d+)/ },
-  "cacerts" => { url: "https://curl.se/ca/", pattern: /cacert-(\d{4}-\d{2}-\d{2})\.pem/ },
-}.freeze
+  if tag =~ /^(.*)#{Regexp.escape(version)}$/
+    $1
+  else
+    ""
+  end
+end
 
-DEPRECATED_COMMENT = "# expeditor/ignore: deprecated".freeze
+def infer_check_strategy(name, source_url, version)
+  return SOURCE_OVERRIDES[name] if SOURCE_OVERRIDES.key?(name)
+  return nil unless source_url && version
+  return nil if SKIP_VERSION_CHECK.include?(name)
+
+  uri = URI(source_url)
+
+  # GitHub source -> check via tags API
+  if uri.host == "github.com"
+    match = source_url.match(%r{github\.com/([^/]+)/([^/]+)/})
+    return nil unless match
+
+    owner, repo = match[1], match[2]
+    prefix = infer_github_prefix(source_url, version)
+    return { type: :github, owner: owner, repo: repo, prefix: prefix }
+  end
+
+  # HTTP source -> derive directory listing URL and filename pattern
+  filename = File.basename(uri.path)
+  return nil if filename.empty? || !filename.include?(version)
+
+  dir_url = source_url.sub(%r{/[^/]+$}, "/")
+  parts = filename.split(version, 2)
+  return nil if parts.length != 2
+
+  pre = Regexp.escape(parts[0])
+  post = Regexp.escape(parts[1])
+  pattern = /#{pre}([^\s"<>]+?)#{post}/
+
+  { type: :http, url: dir_url, pattern: pattern }
+rescue URI::InvalidURIError
+  nil
+end
 
 # ---------------------------------------------------------------------------
 # Check a single software for updates
 # ---------------------------------------------------------------------------
-def check_for_update(name, current_version)
-  return nil unless current_version
-
+def check_for_update(name, strategy, current_version)
   latest = nil
 
-  if GITHUB_SOURCES.key?(name)
-    gh = GITHUB_SOURCES[name]
-    prefix = gh[:prefix] || "v"
-    latest = check_github_tags(gh[:owner], gh[:repo], prefix: prefix)
-  elsif HTTP_SOURCES.key?(name)
-    hs = HTTP_SOURCES[name]
-    latest = check_http_directory(hs[:url], hs[:pattern])
-  else
-    return nil
+  if strategy[:type] == :github
+    latest = check_github_tags(
+      strategy[:owner], strategy[:repo],
+      prefix: strategy[:prefix] || "v",
+      version_separator: strategy[:version_separator] || "."
+    )
+  elsif strategy[:type] == :http
+    latest = check_http_directory(strategy[:url], strategy[:pattern])
   end
 
   return nil unless latest
@@ -157,7 +201,6 @@ def check_for_update(name, current_version)
       { name: name, current: current_version, latest: latest }
     end
   rescue ArgumentError
-    # Non-semver versions (e.g., dates for cacerts)
     if latest > current_version
       { name: name, current: current_version, latest: latest }
     end
@@ -295,16 +338,6 @@ def create_version_update_mr(update)
 end
 
 # ---------------------------------------------------------------------------
-# Check if a software file has the deprecated comment marker
-# ---------------------------------------------------------------------------
-def deprecated_software?(name)
-  filepath = File.join(OmnibusSoftware.root, "config", "software", "#{name}.rb")
-  return false unless File.exist?(filepath)
-
-  File.foreach(filepath).any? { |line| line.include?(DEPRECATED_COMMENT) }
-end
-
-# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 filter = ARGV.first
@@ -315,25 +348,43 @@ updates = []
 skipped = 0
 checked = 0
 
-OmnibusSoftware.for_each_software do |software|
-  name = software.name
-  current_version = software.default_version
+Omnibus::Config.local_software_dirs(OmnibusSoftware.root)
+project = Omnibus::Project.new.evaluate do
+  name "version-check"
+  install_dir "/tmp/version-check"
+end
 
-  next if filter && name != filter
-  next if deprecated_software?(name)
+Dir.glob(OmnibusSoftware.root.join("config/software/*.rb")).sort.each do |filepath|
+  sw_name = File.basename(filepath, ".rb")
+
+  next if filter && sw_name != filter
+  next if File.foreach(filepath).any? { |line| line.include?(DEPRECATED_COMMENT) }
+
+  software = Omnibus::Software.load(project, sw_name, nil)
+  current_version = software.default_version
+  source_url = software.source && software.source[:url]
+
+  # Skip software with no version, git-only sources (unless overridden), or no source
+  next unless current_version
+  next if !source_url && !SOURCE_OVERRIDES.key?(sw_name)
+
+  strategy = infer_check_strategy(sw_name, source_url, current_version)
+  unless strategy
+    next unless filter # only show "skipped" when explicitly requested
+    puts "Checking #{sw_name}... skipped (no checker)"
+    skipped += 1
+    next
+  end
 
   checked += 1
-  print "Checking #{name}..."
+  print "Checking #{sw_name}..."
 
-  update = check_for_update(name, current_version)
+  update = check_for_update(sw_name, strategy, current_version)
   if update
     puts " UPDATE AVAILABLE: #{update[:current]} -> #{update[:latest]}"
     updates << update
-  elsif current_version && (GITHUB_SOURCES.key?(name) || HTTP_SOURCES.key?(name))
-    puts " up to date (#{current_version})"
   else
-    puts " skipped (no checker configured)"
-    skipped += 1
+    puts " up to date (#{current_version})"
   end
 end
 
