@@ -15,7 +15,7 @@
 #
 
 name "libxcrypt"
-default_version "4.4.38" # Updated for modern .so.2 implementation
+default_version "4.5.2" # Updated for modern .so.2 implementation
 
 license "LGPL-2.1"
 license_file "COPYING.LIB"
