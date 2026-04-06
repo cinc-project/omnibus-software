@@ -29,6 +29,7 @@ internal_source url: "#{ENV["ARTIFACTORY_REPO_URL"]}/#{name}/#{version}.tar.gz",
 
 # versions_list: https://github.com/logrotate/logrotate/tags filter=*.tar.gz
 
+version("3.22.0") { source sha256: "f55b0f105f8ff145ea5b98166247d0c5d107f7fa8e8708130a2213dbde992db9" }
 version("3.21.0") { source sha256: "7f58d6ab7e4eab3403528a88d3747a91b03e83e866a8fb966551016e0df527bb" }
 version("3.20.1") { source sha256: "f37458dee3b4adab6719767ad4b93ff9ec8948755d1148b76f7f4c2c68d3e457" }
 version("3.19.0") { source sha256: "7de1796cb99ce4ed21770b5dae0b4e6f81de0b4df310a58a1617d8061b1e0930" }
