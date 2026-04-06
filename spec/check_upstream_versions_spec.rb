@@ -424,6 +424,117 @@ RSpec.describe "check_upstream_versions" do
   end
 
   # -----------------------------------------------------------------------
+  # extract_source_url_template
+  # -----------------------------------------------------------------------
+  describe "#extract_source_url_template" do
+    let(:tmpdir) { Dir.mktmpdir }
+    after { FileUtils.remove_entry(tmpdir) }
+
+    it "extracts a source url template with version interpolation" do
+      File.write(File.join(tmpdir, "zlib.rb"), <<~RUBY)
+        name "zlib"
+        default_version "1.3.2"
+        source url: "https://zlib.net/fossils/zlib-\#{version}.tar.gz"
+      RUBY
+      expect(extract_source_url_template(File.join(tmpdir, "zlib.rb")))
+        .to eq('https://zlib.net/fossils/zlib-#{version}.tar.gz')
+    end
+
+    it "returns nil when no source url found" do
+      File.write(File.join(tmpdir, "nosource.rb"), <<~RUBY)
+        name "nosource"
+        default_version "1.0"
+      RUBY
+      expect(extract_source_url_template(File.join(tmpdir, "nosource.rb"))).to be_nil
+    end
+  end
+
+  # -----------------------------------------------------------------------
+  # resolve_source_url
+  # -----------------------------------------------------------------------
+  describe "#resolve_source_url" do
+    it "substitutes version into template" do
+      template = 'https://example.com/pkg-#{version}.tar.gz'
+      expect(resolve_source_url(template, "2.0.0")).to eq("https://example.com/pkg-2.0.0.tar.gz")
+    end
+  end
+
+  # -----------------------------------------------------------------------
+  # download_sha256
+  # -----------------------------------------------------------------------
+  describe "#download_sha256" do
+    it "computes sha256 of downloaded content" do
+      stub_request(:get, "https://example.com/file.tar.gz")
+        .to_return(status: 200, body: "test content")
+
+      expected = Digest::SHA256.hexdigest("test content")
+      expect(download_sha256("https://example.com/file.tar.gz")).to eq(expected)
+    end
+
+    it "follows redirects" do
+      stub_request(:get, "https://example.com/file.tar.gz")
+        .to_return(status: 302, headers: { "Location" => "https://mirror.example.com/file.tar.gz" })
+      stub_request(:get, "https://mirror.example.com/file.tar.gz")
+        .to_return(status: 200, body: "redirected content")
+
+      expected = Digest::SHA256.hexdigest("redirected content")
+      expect(download_sha256("https://example.com/file.tar.gz")).to eq(expected)
+    end
+
+    it "returns nil on HTTP error" do
+      stub_request(:get, "https://example.com/file.tar.gz")
+        .to_return(status: 404)
+
+      expect { expect(download_sha256("https://example.com/file.tar.gz")).to be_nil }
+        .to output(/Download failed/).to_stderr
+    end
+
+    it "returns nil on too many redirects" do
+      stub_request(:get, "https://example.com/file.tar.gz")
+        .to_return(status: 302, headers: { "Location" => "https://example.com/file.tar.gz" })
+
+      expect { expect(download_sha256("https://example.com/file.tar.gz", max_redirects: 3)).to be_nil }
+        .to output(/Too many redirects/).to_stderr
+    end
+  end
+
+  # -----------------------------------------------------------------------
+  # version_line
+  # -----------------------------------------------------------------------
+  describe "#version_line" do
+    it "returns a properly formatted version line" do
+      expect(version_line("1.4.0", "abc123"))
+        .to eq('version("1.4.0") { source sha256: "abc123" }')
+    end
+  end
+
+  # -----------------------------------------------------------------------
+  # insert_version_line
+  # -----------------------------------------------------------------------
+  describe "#insert_version_line" do
+    it "inserts at the top of the version block" do
+      content = <<~RUBY
+        name "zlib"
+        default_version "1.3.2"
+        version("1.3.2") { source sha256: "aaa" }
+        version("1.3.1") { source sha256: "bbb" }
+        source url: "https://example.com"
+      RUBY
+
+      result = insert_version_line(content, 'version("1.4.0") { source sha256: "ccc" }')
+      lines = result.lines.map(&:strip)
+      idx_new = lines.index('version("1.4.0") { source sha256: "ccc" }')
+      idx_132 = lines.index('version("1.3.2") { source sha256: "aaa" }')
+      expect(idx_new).to be < idx_132
+    end
+
+    it "returns original content when no version block exists" do
+      content = "name \"zlib\"\ndefault_version \"1.0\"\n"
+      expect(insert_version_line(content, 'version("1.1") { source sha256: "abc" }')).to eq(content)
+    end
+  end
+
+  # -----------------------------------------------------------------------
   # GitLab API helpers
   # -----------------------------------------------------------------------
   describe "GitLab API helpers" do
@@ -516,12 +627,85 @@ RSpec.describe "check_upstream_versions" do
       expect(mr_create).to have_been_requested
     end
 
-    it "skips when branch already exists" do
+    it "skips when branch exists and no checksum available" do
       stub_request(:get, "https://gitlab.com/api/v4/projects/12345/repository/branches/auto%2Fupdate-zlib-1.4.0")
         .to_return(status: 200, body: '{"name": "auto/update-zlib-1.4.0"}')
 
       update = { name: "zlib", current: "1.3.2", latest: "1.4.0" }
-      expect { create_version_update_mr(update) }.to output(/already exists/).to_stdout
+      expect { create_version_update_mr(update) }.to output(/no checksum to add/).to_stdout
+    end
+
+    context "when branch exists and checksum can be computed" do
+      before do
+        # Write a fixture with source url and version block
+        sw_dir = File.join(tmpdir, "config", "software")
+        File.write(File.join(sw_dir, "zlib.rb"), <<~RUBY)
+          name "zlib"
+          default_version "1.3.2"
+          version("1.3.2") { source sha256: "aaa" }
+          source url: "https://example.com/zlib-\#{version}.tar.gz"
+        RUBY
+      end
+
+      it "adds checksum commit to existing branch" do
+        # Branch exists
+        stub_request(:get, "https://gitlab.com/api/v4/projects/12345/repository/branches/auto%2Fupdate-zlib-1.4.0")
+          .to_return(status: 200, body: '{"name": "auto/update-zlib-1.4.0"}')
+
+        # Download tarball for sha256
+        stub_request(:get, "https://example.com/zlib-1.4.0.tar.gz")
+          .to_return(status: 200, body: "fake tarball content")
+
+        # Fetch file from branch (no version line for 1.4.0 yet)
+        branch_content = <<~RUBY
+          name "zlib"
+          default_version "1.4.0"
+          version("1.3.2") { source sha256: "aaa" }
+          source url: "https://example.com/zlib-\#{version}.tar.gz"
+        RUBY
+        stub_request(:get, "https://gitlab.com/api/v4/projects/12345/repository/files/config%2Fsoftware%2Fzlib.rb/raw?ref=auto%2Fupdate-zlib-1.4.0")
+          .to_return(status: 200, body: branch_content)
+
+        # Commit the checksum
+        commit_stub = stub_request(:post, "https://gitlab.com/api/v4/projects/12345/repository/commits")
+          .to_return(status: 201, body: "{}")
+
+        # Find open MR
+        stub_request(:get, %r{/merge_requests\?source_branch=auto(/|%2F)update-zlib-1\.4\.0&state=opened})
+          .to_return(status: 200, body: '[{"iid": 42}]')
+
+        # Update MR description
+        mr_update_stub = stub_request(:put, "https://gitlab.com/api/v4/projects/12345/merge_requests/42")
+          .to_return(status: 200, body: '{"iid": 42}')
+
+        update = { name: "zlib", current: "1.3.2", latest: "1.4.0" }
+        expect { create_version_update_mr(update) }
+          .to output(/Added checksum.*Updated MR/m).to_stdout
+
+        expect(commit_stub).to have_been_requested
+        expect(mr_update_stub).to have_been_requested
+      end
+
+      it "skips when branch already has version line" do
+        stub_request(:get, "https://gitlab.com/api/v4/projects/12345/repository/branches/auto%2Fupdate-zlib-1.4.0")
+          .to_return(status: 200, body: '{"name": "auto/update-zlib-1.4.0"}')
+
+        stub_request(:get, "https://example.com/zlib-1.4.0.tar.gz")
+          .to_return(status: 200, body: "fake tarball content")
+
+        branch_content = <<~RUBY
+          name "zlib"
+          default_version "1.4.0"
+          version("1.4.0") { source sha256: "already_there" }
+          version("1.3.2") { source sha256: "aaa" }
+        RUBY
+        stub_request(:get, "https://gitlab.com/api/v4/projects/12345/repository/files/config%2Fsoftware%2Fzlib.rb/raw?ref=auto%2Fupdate-zlib-1.4.0")
+          .to_return(status: 200, body: branch_content)
+
+        update = { name: "zlib", current: "1.3.2", latest: "1.4.0" }
+        expect { create_version_update_mr(update) }
+          .to output(/already has version line/).to_stdout
+      end
     end
   end
 

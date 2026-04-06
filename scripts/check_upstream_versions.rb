@@ -24,6 +24,7 @@
 require "net/http"
 require "uri"
 require "json"
+require "digest"
 
 $LOAD_PATH.unshift File.expand_path("../lib", __dir__)
 require "omnibus-software"
@@ -225,6 +226,10 @@ def gitlab_api(method, path, body = nil)
     req = Net::HTTP::Post.new(uri)
     req.body = body.to_json if body
     req["Content-Type"] = "application/json"
+  when :put
+    req = Net::HTTP::Put.new(uri)
+    req.body = body.to_json if body
+    req["Content-Type"] = "application/json"
   end
 
   if ENV["CINC_PROJECT_TOKEN"]
@@ -264,6 +269,107 @@ def create_merge_request(source_branch, title, description)
     description: description,
     remove_source_branch: true,
   })
+end
+
+def get_file_from_branch(branch_name, file_path)
+  encoded_path = URI.encode_www_form_component(file_path)
+  encoded_branch = URI.encode_www_form_component(branch_name)
+  resp = gitlab_api(:get, "/projects/#{CI_PROJECT_ID}/repository/files/#{encoded_path}/raw?ref=#{encoded_branch}")
+  return nil unless resp.code == "200"
+
+  resp.body
+end
+
+def update_mr_description(mr_iid, description)
+  gitlab_api(:put, "/projects/#{CI_PROJECT_ID}/merge_requests/#{mr_iid}", {
+    description: description,
+  })
+end
+
+def find_open_mr(branch_name)
+  encoded = URI.encode_www_form_component(branch_name)
+  resp = gitlab_api(:get, "/projects/#{CI_PROJECT_ID}/merge_requests?source_branch=#{encoded}&state=opened")
+  return nil unless resp.code == "200"
+
+  mrs = JSON.parse(resp.body)
+  mrs.first
+end
+
+# ---------------------------------------------------------------------------
+# Extract the source URL template from a software definition file.
+# Returns the URL string with #{version} still as a literal placeholder.
+# ---------------------------------------------------------------------------
+def extract_source_url_template(file)
+  content = File.read(file)
+  # Match: source url: "https://...#{version}..."
+  if content =~ /^\s*source\s+url:\s*["']([^"']*\#\{version\}[^"']*)["']/
+    $1
+  end
+end
+
+# ---------------------------------------------------------------------------
+# Resolve a source URL template to a concrete URL for a given version.
+# ---------------------------------------------------------------------------
+def resolve_source_url(template, version)
+  template.gsub('#{version}', version)
+end
+
+# ---------------------------------------------------------------------------
+# Download a URL and compute its SHA256 hex digest. Follows redirects.
+# Returns the hex digest string, or nil on failure.
+# ---------------------------------------------------------------------------
+def download_sha256(url, max_redirects: 5)
+  uri = URI(url)
+  max_redirects.times do
+    resp = Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == "https",
+                           open_timeout: 15, read_timeout: 60) do |http|
+                             http.request(Net::HTTP::Get.new(uri))
+                           end
+
+    case resp
+    when Net::HTTPSuccess
+      return Digest::SHA256.hexdigest(resp.body)
+    when Net::HTTPRedirection
+      uri = URI(resp["location"])
+    else
+      $stderr.puts "  Download failed for #{url}: HTTP #{resp.code}"
+      return nil
+    end
+  end
+  $stderr.puts "  Too many redirects for #{url}"
+  nil
+rescue StandardError => e
+  $stderr.puts "  Download error for #{url}: #{e.message}"
+  nil
+end
+
+# ---------------------------------------------------------------------------
+# Build a version line: version("X.Y.Z") { source sha256: "abc..." }
+# ---------------------------------------------------------------------------
+def version_line(version, sha256)
+  "version(\"#{version}\") { source sha256: \"#{sha256}\" }"
+end
+
+# ---------------------------------------------------------------------------
+# Insert a version line into file content. Adds it after the last existing
+# version(...) line so it appears at the top of the version block.
+# Returns updated content, or original content if no version block found.
+# ---------------------------------------------------------------------------
+def insert_version_line(content, new_line)
+  lines = content.lines
+  last_version_idx = nil
+  lines.each_with_index do |line, idx|
+    last_version_idx = idx if line =~ /^version\(/
+  end
+
+  if last_version_idx
+    # Find the first version line to insert at the top of the block
+    first_version_idx = lines.index { |line| line =~ /^version\(/ }
+    lines.insert(first_version_idx, "#{new_line}\n")
+    lines.join
+  else
+    content
+  end
 end
 
 # ---------------------------------------------------------------------------
@@ -306,16 +412,31 @@ def create_version_update_mr(update)
   latest = update[:latest]
 
   branch_name = "auto/update-#{name}-#{latest}"
-
-  if branch_exists?(branch_name)
-    puts "  Branch #{branch_name} already exists, skipping MR creation"
-    return
-  end
-
   file_path = "config/software/#{name}.rb"
   full_path = File.join(OmnibusSoftware.root, file_path)
+
+  # Try to compute sha256 for the new version
+  url_template = extract_source_url_template(full_path)
+  sha256 = nil
+  if url_template
+    download_url = resolve_source_url(url_template, latest)
+    puts "  Downloading #{download_url} for sha256..."
+    sha256 = download_sha256(download_url)
+    puts "  sha256: #{sha256}" if sha256
+  end
+
+  if branch_exists?(branch_name)
+    return update_existing_mr(branch_name, file_path, name, current, latest, sha256)
+  end
+
   new_content = updated_default_version_content(full_path, current, latest)
   return unless new_content
+
+  if sha256
+    new_content = insert_version_line(new_content, version_line(latest, sha256))
+  else
+    puts "  Could not compute sha256, MR will need manual checksum"
+  end
 
   puts "  Creating branch #{branch_name}"
   resp = create_branch(branch_name)
@@ -331,7 +452,72 @@ def create_version_update_mr(update)
     return
   end
 
+  create_mr_with_description(branch_name, name, current, latest, sha256)
+end
+
+# ---------------------------------------------------------------------------
+# Update an existing MR branch with checksum if missing
+# ---------------------------------------------------------------------------
+def update_existing_mr(branch_name, file_path, name, current, latest, sha256)
+  unless sha256
+    puts "  Branch #{branch_name} already exists, no checksum to add"
+    return
+  end
+
+  # Fetch current file from the branch to check if checksum already present
+  branch_content = get_file_from_branch(branch_name, file_path)
+  unless branch_content
+    puts "  Branch #{branch_name} exists but could not fetch file, skipping"
+    return
+  end
+
+  if branch_content.include?("version(\"#{latest}\")")
+    puts "  Branch #{branch_name} already has version line for #{latest}, skipping"
+    return
+  end
+
+  # Add the version line
+  new_content = insert_version_line(branch_content, version_line(latest, sha256))
+  commit_msg = "Add sha256 checksum for #{name} #{latest}"
+  resp = create_commit(branch_name, file_path, new_content, commit_msg)
+  unless resp.code == "201"
+    $stderr.puts "  Failed to add checksum commit: #{resp.code} #{resp.body}"
+    return
+  end
+
+  puts "  Added checksum to existing branch #{branch_name}"
+
+  # Update MR description if there's an open MR
+  mr = find_open_mr(branch_name)
+  if mr
+    checksum_note = "> Checksum for `#{latest}` was computed automatically."
+    description = <<~MD
+      Automated version update for **#{name}**.
+
+      | | Version |
+      |---|---|
+      | Current | `#{current}` |
+      | Latest | `#{latest}` |
+
+      #{checksum_note}
+      > - Verify the build succeeds in CI before merging
+    MD
+    update_mr_description(mr["iid"], description)
+    puts "  Updated MR !#{mr["iid"]} description"
+  end
+end
+
+# ---------------------------------------------------------------------------
+# Create MR with appropriate description
+# ---------------------------------------------------------------------------
+def create_mr_with_description(branch_name, name, current, latest, sha256)
   title = "Update #{name} to #{latest}"
+  checksum_note = if sha256
+                    "> Checksum for `#{latest}` was computed automatically."
+                  else
+                    "> **Note**: Could not compute sha256 automatically. You need to:\n" \
+                    "> - Add a `version(\"#{latest}\")` line with the correct sha256 checksum"
+                  end
   description = <<~MD
     Automated version update for **#{name}**.
 
@@ -340,8 +526,7 @@ def create_version_update_mr(update)
     | Current | `#{current}` |
     | Latest | `#{latest}` |
 
-    > **Note**: This MR only updates `default_version`. You may also need to:
-    > - Add a new `version("#{latest}")` line with the correct sha256 checksum
+    #{checksum_note}
     > - Verify the build succeeds in CI before merging
   MD
 
@@ -439,8 +624,23 @@ if __FILE__ == $PROGRAM_NAME
     puts ""
     puts "Updating local files..."
     updates.each do |update|
+      full_path = File.join(OmnibusSoftware.root, "config", "software", "#{update[:name]}.rb")
       if update_local_file(update[:name], update[:current], update[:latest])
         puts "  Updated config/software/#{update[:name]}.rb"
+        # Also compute and insert checksum
+        url_template = extract_source_url_template(full_path)
+        if url_template
+          download_url = resolve_source_url(url_template, update[:latest])
+          puts "  Downloading #{download_url} for sha256..."
+          sha256 = download_sha256(download_url)
+          if sha256
+            puts "  sha256: #{sha256}"
+            content = File.read(full_path)
+            content = insert_version_line(content, version_line(update[:latest], sha256))
+            File.write(full_path, content)
+            puts "  Added version line with checksum"
+          end
+        end
       end
     end
     puts "Not in CI (no CINC_PROJECT_TOKEN/CI_PROJECT_ID), skipping MR creation."
