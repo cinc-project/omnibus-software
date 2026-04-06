@@ -21,6 +21,7 @@ license "LGPL-2.1"
 license_file "COPYING.LIB"
 skip_transitive_dependency_licensing true
 
+version("4.5.2") { source sha256: "71513a31c01a428bccd5367a32fd95f115d6dac50fb5b60c779d5c7942aec071" }
 version("4.4.38") { source sha256: "80304b9c306ea799327f01d9a7549bdb28317789182631f1b54f4511b4206dd6" }
 version("4.4.36") { source sha256: "e5e1f4caee0a01de2aee26e3138807d6d3ca2b8e67287966d1fefd65e1fd8943" }
 
