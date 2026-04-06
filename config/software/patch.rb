@@ -22,7 +22,7 @@ license "GPL-3.0"
 license_file "COPYING"
 skip_transitive_dependency_licensing true
 
-default_version "2.7.6"
+default_version "2.8"
 
 # version_list: url=https://ftp.osuosl.org/pub/gnu/patch/ filter=*.tar.gz
 
