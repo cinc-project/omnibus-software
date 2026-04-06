@@ -371,7 +371,7 @@ RSpec.describe "check_upstream_versions" do
 
       result = updated_default_version_content(file, "1.3.2", "1.4.0")
       expect(result).to include('default_version "1.4.0"')
-      expect(result).to include('version("1.3.2")')  # should NOT change version lines
+      expect(result).to include('version("1.3.2")') # should NOT change version lines
     end
 
     it "replaces default_version with single quotes" do
@@ -531,7 +531,7 @@ RSpec.describe "check_upstream_versions" do
   describe "SOURCE_OVERRIDES" do
     it "has valid type for every entry" do
       SOURCE_OVERRIDES.each do |name, override|
-        expect(%i[github http]).to include(override[:type]), "#{name} has invalid type #{override[:type]}"
+        expect(%i{github http}).to include(override[:type]), "#{name} has invalid type #{override[:type]}"
       end
     end
 

@@ -32,7 +32,7 @@ CI_JOB_TOKEN = ENV["CI_JOB_TOKEN"]
 CI_PROJECT_ID = ENV["CI_PROJECT_ID"]
 CI_SERVER_URL = ENV["CI_SERVER_URL"] || "https://gitlab.com"
 DRY_RUN = ENV["DRY_RUN"] == "true"
-DEFAULT_BRANCH = "stable/cinc"
+DEFAULT_BRANCH = "stable/cinc".freeze
 
 Omnibus.logger.level = :fatal
 
@@ -62,12 +62,12 @@ SOURCE_OVERRIDES = {
 }.freeze
 
 # Software to skip (binary downloads, platform-specific, not meaningful to check)
-SKIP_VERSION_CHECK = %w[
+SKIP_VERSION_CHECK = %w{
   server-open-jre ruby-msys2-devkit ruby-windows-devkit ruby-windows-devkit-bash
   nodejs-binary ibm-jre jre-from-jdk
   elasticsearch opensearch openssl-fips
   go
-].freeze
+}.freeze
 
 # ---------------------------------------------------------------------------
 # GitHub: fetch tags and find highest semver
@@ -94,7 +94,7 @@ def check_github_tags(owner, repo, prefix: "v", version_separator: ".")
   end
 
   versions.reject { |v| v.include?("rc") || v.include?("beta") || v.include?("alpha") || v.include?("pre") }
-           .max_by { |v| Gem::Version.new(v) }
+    .max_by { |v| Gem::Version.new(v) }
 end
 
 # ---------------------------------------------------------------------------
@@ -104,8 +104,8 @@ def check_http_directory(url, name_pattern)
   uri = URI(url)
   resp = Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == "https",
                          open_timeout: 10, read_timeout: 15) do |http|
-    http.request(Net::HTTP::Get.new(uri))
-  end
+                           http.request(Net::HTTP::Get.new(uri))
+                         end
   return nil unless resp.code == "200"
 
   versions = resp.body.scan(name_pattern).filter_map do |match|
@@ -119,7 +119,7 @@ def check_http_directory(url, name_pattern)
   end
 
   versions.reject { |v| v.include?("rc") || v.include?("beta") || v.include?("alpha") || v.include?("pre") }
-           .max_by { |v| Gem::Version.new(v) }
+    .max_by { |v| Gem::Version.new(v) }
 rescue StandardError => e
   $stderr.puts "  HTTP check failed for #{url}: #{e.message}"
   nil
@@ -356,88 +356,89 @@ end
 if __FILE__ == $PROGRAM_NAME
   filter = ARGV.first
 
-puts "Loading software definitions via omnibus..."
+  puts "Loading software definitions via omnibus..."
 
-updates = []
-skipped = 0
-checked = 0
+  updates = []
+  skipped = 0
+  checked = 0
 
-Omnibus::Config.local_software_dirs(OmnibusSoftware.root)
-project = Omnibus::Project.new.evaluate do
-  name "version-check"
-  install_dir "/tmp/version-check"
-end
-
-Dir.glob(OmnibusSoftware.root.join("config/software/*.rb")).sort.each do |filepath|
-  sw_name = File.basename(filepath, ".rb")
-
-  next if filter && sw_name != filter
-  next if File.foreach(filepath).any? { |line| line.include?(DEPRECATED_COMMENT) }
-
-  software = Omnibus::Software.load(project, sw_name, nil)
-  current_version = software.default_version
-  source_url = software.source && software.source[:url]
-
-  # Skip software with no version, git-only sources (unless overridden), or no source
-  next unless current_version
-  next if !source_url && !SOURCE_OVERRIDES.key?(sw_name)
-
-  strategy = infer_check_strategy(sw_name, source_url, current_version)
-  unless strategy
-    next unless filter # only show "skipped" when explicitly requested
-    puts "Checking #{sw_name}... skipped (no checker)"
-    skipped += 1
-    next
+  Omnibus::Config.local_software_dirs(OmnibusSoftware.root)
+  project = Omnibus::Project.new.evaluate do
+    name "version-check"
+    install_dir "/tmp/version-check"
   end
 
-  checked += 1
-  print "Checking #{sw_name}..."
+  Dir.glob(OmnibusSoftware.root.join("config/software/*.rb")).sort.each do |filepath|
+    sw_name = File.basename(filepath, ".rb")
 
-  update = check_for_update(sw_name, strategy, current_version)
-  if update
-    puts " UPDATE AVAILABLE: #{update[:current]} -> #{update[:latest]}"
-    unless DRY_RUN
-      if update_local_file(sw_name, update[:current], update[:latest])
-        puts "  Updated config/software/#{sw_name}.rb"
-      end
+    next if filter && sw_name != filter
+    next if File.foreach(filepath).any? { |line| line.include?(DEPRECATED_COMMENT) }
+
+    software = Omnibus::Software.load(project, sw_name, nil)
+    current_version = software.default_version
+    source_url = software.source && software.source[:url]
+
+    # Skip software with no version, git-only sources (unless overridden), or no source
+    next unless current_version
+    next if !source_url && !SOURCE_OVERRIDES.key?(sw_name)
+
+    strategy = infer_check_strategy(sw_name, source_url, current_version)
+    unless strategy
+      next unless filter # only show "skipped" when explicitly requested
+
+      puts "Checking #{sw_name}... skipped (no checker)"
+      skipped += 1
+      next
     end
-    updates << update
-  else
-    puts " up to date (#{current_version})"
+
+    checked += 1
+    print "Checking #{sw_name}..."
+
+    update = check_for_update(sw_name, strategy, current_version)
+    if update
+      puts " UPDATE AVAILABLE: #{update[:current]} -> #{update[:latest]}"
+      unless DRY_RUN
+        if update_local_file(sw_name, update[:current], update[:latest])
+          puts "  Updated config/software/#{sw_name}.rb"
+        end
+      end
+      updates << update
+    else
+      puts " up to date (#{current_version})"
+    end
   end
-end
 
-puts ""
-puts "=" * 60
-puts "Results: #{updates.length} updates found, #{checked} checked, #{skipped} skipped (no checker)"
-puts "=" * 60
-
-# Write report
-report = {
-  checked_at: Time.now.utc.iso8601,
-  updates: updates,
-  total_checked: checked,
-  skipped: skipped,
-}
-
-File.write("version_report.json", JSON.pretty_generate(report))
-puts "Report written to version_report.json"
-
-# Create MRs if in CI and not dry run
-if updates.any? && CI_JOB_TOKEN && CI_PROJECT_ID && !DRY_RUN
   puts ""
-  puts "Creating merge requests..."
-  updates.each do |update|
-    puts "Processing #{update[:name]}..."
-    create_version_update_mr(update)
+  puts "=" * 60
+  puts "Results: #{updates.length} updates found, #{checked} checked, #{skipped} skipped (no checker)"
+  puts "=" * 60
+
+  # Write report
+  report = {
+    checked_at: Time.now.utc.iso8601,
+    updates: updates,
+    total_checked: checked,
+    skipped: skipped,
+  }
+
+  File.write("version_report.json", JSON.pretty_generate(report))
+  puts "Report written to version_report.json"
+
+  # Create MRs if in CI and not dry run
+  if updates.any? && CI_JOB_TOKEN && CI_PROJECT_ID && !DRY_RUN
+    puts ""
+    puts "Creating merge requests..."
+    updates.each do |update|
+      puts "Processing #{update[:name]}..."
+      create_version_update_mr(update)
+    end
+  elsif updates.any? && DRY_RUN
+    puts ""
+    puts "DRY_RUN=true, no files modified. Updates that would be applied:"
+    updates.each { |u| puts "  #{u[:name]}: #{u[:current]} -> #{u[:latest]}" }
+  elsif updates.any?
+    puts ""
+    puts "Updated #{updates.length} software definition(s) locally."
+    puts "Not in CI (no CI_JOB_TOKEN/CI_PROJECT_ID), skipping MR creation."
   end
-elsif updates.any? && DRY_RUN
-  puts ""
-  puts "DRY_RUN=true, no files modified. Updates that would be applied:"
-  updates.each { |u| puts "  #{u[:name]}: #{u[:current]} -> #{u[:latest]}" }
-elsif updates.any?
-  puts ""
-  puts "Updated #{updates.length} software definition(s) locally."
-  puts "Not in CI (no CI_JOB_TOKEN/CI_PROJECT_ID), skipping MR creation."
-end
 end # if __FILE__ == $PROGRAM_NAME
