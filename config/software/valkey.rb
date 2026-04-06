@@ -25,7 +25,7 @@ dependency "openssl"
 dependency "libuuid"
 dependency "curl"
 
-default_version "7.2.11"
+default_version "9.0.3"
 
 source url: "https://github.com/valkey-io/valkey/archive/refs/tags/#{version}.tar.gz"
 internal_source url: "#{ENV["ARTIFACTORY_REPO_URL"]}/#{name}/#{name}-#{version}.tar.gz",
