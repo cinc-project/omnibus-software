@@ -23,6 +23,7 @@ skip_transitive_dependency_licensing true
 
 # version_list: url=http://tukaani.org/xz/ filer=*.tar.gz
 
+version("5.8.3") { source sha256: "3d3a1b973af218114f4f889bbaa2f4c037deaae0c8e815eec381c3d546b974a0" }
 version("5.8.2") { source sha256: "ce09c50a5962786b83e5da389c90dd2c15ecd0980a258dd01f70f9e7ce58a8f1" }
 version("5.8.1") { source sha256: "507825b599356c10dca1cd720c9d0d0c9d5400b9de300af00e4d1ea150795543" }
 version("5.4.7") { source sha256: "8db6664c48ca07908b92baedcfe7f3ba23f49ef2476864518ab5db6723836e71" }
