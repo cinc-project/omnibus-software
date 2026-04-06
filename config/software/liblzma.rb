@@ -15,7 +15,7 @@
 #
 
 name "liblzma"
-default_version "5.8.2"
+default_version "5.8.3"
 
 license "Public-Domain"
 license_file "COPYING"
