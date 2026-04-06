@@ -15,7 +15,7 @@
 #   bundle exec ruby scripts/check_upstream_versions.rb openssl    # check specific
 #
 # Environment:
-#   CI_JOB_TOKEN   - GitLab token for creating MRs (set by CI)
+#   CINC_PROJECT_TOKEN - Project/group access token with api scope (for MR creation)
 #   CI_PROJECT_ID  - GitLab project ID (set by CI)
 #   CI_SERVER_URL  - GitLab server URL (set by CI)
 #   DRY_RUN        - set to "true" to skip MR creation
@@ -28,7 +28,7 @@ require "json"
 $LOAD_PATH.unshift File.expand_path("../lib", __dir__)
 require "omnibus-software"
 
-CI_JOB_TOKEN = ENV["CI_JOB_TOKEN"]
+GITLAB_TOKEN = ENV["CINC_PROJECT_TOKEN"] || ENV["CI_JOB_TOKEN"]
 CI_PROJECT_ID = ENV["CI_PROJECT_ID"]
 CI_SERVER_URL = ENV["CI_SERVER_URL"] || "https://gitlab.com"
 DRY_RUN = ENV["DRY_RUN"] == "true"
@@ -227,7 +227,11 @@ def gitlab_api(method, path, body = nil)
     req["Content-Type"] = "application/json"
   end
 
-  req["JOB-TOKEN"] = CI_JOB_TOKEN
+  if ENV["CINC_PROJECT_TOKEN"]
+    req["PRIVATE-TOKEN"] = GITLAB_TOKEN
+  else
+    req["JOB-TOKEN"] = GITLAB_TOKEN
+  end
   http.request(req)
 end
 
@@ -420,7 +424,7 @@ if __FILE__ == $PROGRAM_NAME
   puts "Report written to version_report.json"
 
   # Create MRs if in CI and not dry run
-  if updates.any? && CI_JOB_TOKEN && CI_PROJECT_ID && !DRY_RUN
+  if updates.any? && GITLAB_TOKEN && CI_PROJECT_ID && !DRY_RUN
     puts ""
     puts "Creating merge requests..."
     updates.each do |update|
@@ -439,6 +443,6 @@ if __FILE__ == $PROGRAM_NAME
         puts "  Updated config/software/#{update[:name]}.rb"
       end
     end
-    puts "Not in CI (no CI_JOB_TOKEN/CI_PROJECT_ID), skipping MR creation."
+    puts "Not in CI (no CINC_PROJECT_TOKEN/CI_PROJECT_ID), skipping MR creation."
   end
 end # if __FILE__ == $PROGRAM_NAME

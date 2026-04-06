@@ -429,7 +429,7 @@ RSpec.describe "check_upstream_versions" do
   describe "GitLab API helpers" do
     before do
       stub_const("CI_SERVER_URL", "https://gitlab.com")
-      stub_const("CI_JOB_TOKEN", "test-token")
+      stub_const("GITLAB_TOKEN", "test-token")
       stub_const("CI_PROJECT_ID", "12345")
     end
 
@@ -485,7 +485,7 @@ RSpec.describe "check_upstream_versions" do
 
     before do
       stub_const("CI_SERVER_URL", "https://gitlab.com")
-      stub_const("CI_JOB_TOKEN", "test-token")
+      stub_const("GITLAB_TOKEN", "test-token")
       stub_const("CI_PROJECT_ID", "12345")
 
       sw_dir = File.join(tmpdir, "config", "software")
