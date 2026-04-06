@@ -23,6 +23,7 @@ skip_transitive_dependency_licensing true
 dependency "config_guess"
 default_version "8.6.2"
 
+version("8.6.2") { source sha256: "cea46526594fe05f05b9ff733179eb1263deccf4269059cf081fdef222634c88" }
 version("7.2.3") { source sha256: "3e2b196d6eb4ddb9e743088bfc2915ccbb42d40f5a8a3edd8cb69c716ec34be7" }
 version("7.0.8") { source sha256: "06a339e491306783dcf55b97f15a5dbcbdc01ccbde6dc23027c475cab735e914" }
 version("7.0.4") { source sha256: "f0e65fda74c44a3dd4fa9d512d4d4d833dd0939c934e946a5c622a630d057f2f" }
