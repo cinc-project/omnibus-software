@@ -19,3 +19,4 @@ gemtags
 build-jobs.yml
 cache/
 .*swp
+version_report.json
