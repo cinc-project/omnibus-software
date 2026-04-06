@@ -23,6 +23,7 @@ skip_transitive_dependency_licensing true
 default_version "5.43.9"
 
 # versions_list: http://www.cpan.org/src/ filter=*.tar.gz
+version("5.43.9") { source sha256: "aec72b03806f2003f97e86baf28a22a20cce912d618afadf3df1f005cda5b235" }
 version("5.36.0") { source sha256: "e26085af8ac396f62add8a533c3a0ea8c8497d836f0689347ac5abd7b7a4e00a" }
 version("5.34.1") { source sha256: "357951a491b0ba1ce3611263922feec78ccd581dddc24a446b033e25acf242a1" }
 version("5.34.0") { source sha256: "551efc818b968b05216024fb0b727ef2ad4c100f8cb6b43fab615fa78ae5be9a" }
