@@ -19,4 +19,6 @@ git config user.email "ci@cinc.sh"
 git add VERSION
 git commit -m "Bump version to ${NEW_VERSION}"
 git tag "${NEW_VERSION}"
-git push "https://gitlab-ci-token:${CI_JOB_TOKEN}@${CI_SERVER_HOST}/${CI_PROJECT_PATH}.git" HEAD:${CI_COMMIT_BRANCH} --tags
+REMOTE="https://gitlab-ci-token:${CI_JOB_TOKEN}@${CI_SERVER_HOST}/${CI_PROJECT_PATH}.git"
+git push "${REMOTE}" HEAD:${CI_COMMIT_BRANCH}
+git push "${REMOTE}" "${NEW_VERSION}"
