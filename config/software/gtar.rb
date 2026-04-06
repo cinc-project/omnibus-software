@@ -15,7 +15,7 @@
 #
 
 name "gtar"
-default_version "1.34"
+default_version "1.35"
 
 # version_list: url=https://ftp.osuosl.org/pub/gnu/tar/  filter=*.tar.gz
 version("1.35") { source sha256: "14d55e32063ea9526e057fbf35fcabd53378e769787eff7919c3755b02d2b57e" }
