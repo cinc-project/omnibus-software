@@ -4,7 +4,7 @@ require "omnibus-software/version"
 Gem::Specification.new do |s|
   s.name        = "omnibus-software"
   s.version     = OmnibusSoftware::VERSION
-  s.authors     = ["CINC Project"]
+  s.authors     = ["Cinc Project"]
   s.email       = ["maintainers@cinc.sh"]
   s.license     = "Apache-2.0"
   s.homepage    = "https://gitlab.com/cinc-project/upstream/omnibus-software"

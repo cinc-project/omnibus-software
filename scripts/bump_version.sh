@@ -14,7 +14,7 @@ NEW_VERSION="${YEAR}.${MONTH}.${NEW_BUILD}"
 echo "Bumping version from $(cat VERSION) to ${NEW_VERSION}"
 echo "${NEW_VERSION}" > VERSION
 
-git config user.name "CINC CI"
+git config user.name "Cinc CI"
 git config user.email "ci@cinc.sh"
 git add VERSION
 git commit -m "Bump version to ${NEW_VERSION}"

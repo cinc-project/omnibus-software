@@ -2,8 +2,9 @@
 #
 # check_upstream_versions.rb
 #
-# Parses config/software/*.rb definitions, checks upstream sources for newer
-# versions, and auto-creates GitLab merge requests when updates are found.
+# Uses the omnibus gem to load software definitions from config/software/,
+# checks upstream sources for newer versions, and auto-creates GitLab merge
+# requests when updates are found.
 #
 # Usage:
 #   ruby scripts/check_upstream_versions.rb            # check all
@@ -13,64 +14,25 @@
 #   CI_JOB_TOKEN   - GitLab token for creating MRs (set by CI)
 #   CI_PROJECT_ID  - GitLab project ID (set by CI)
 #   CI_SERVER_URL  - GitLab server URL (set by CI)
-#   CI_PROJECT_PATH - e.g. cinc-project/upstream/omnibus-software
 #   DRY_RUN        - set to "true" to skip MR creation
 #
 
 require "net/http"
 require "uri"
 require "json"
-require "open3"
 
-SOFTWARE_DIR = File.expand_path("../config/software", __dir__)
+# Load the omnibus-software library which provides OmnibusSoftware.for_each_software
+$LOAD_PATH.unshift File.expand_path("../lib", __dir__)
+require "omnibus-software"
 
 CI_JOB_TOKEN = ENV["CI_JOB_TOKEN"]
 CI_PROJECT_ID = ENV["CI_PROJECT_ID"]
 CI_SERVER_URL = ENV["CI_SERVER_URL"] || "https://gitlab.com"
-CI_PROJECT_PATH = ENV["CI_PROJECT_PATH"] || "cinc-project/upstream/omnibus-software"
 DRY_RUN = ENV["DRY_RUN"] == "true"
 DEFAULT_BRANCH = "stable/cinc"
 
-# ---------------------------------------------------------------------------
-# Parse a software .rb file for default_version and source URL pattern
-# ---------------------------------------------------------------------------
-def parse_software(file)
-  lines = File.readlines(file)
-  info = { name: File.basename(file, ".rb"), file: file }
-
-  lines.each do |line|
-    case line
-    when /^\s*default_version\s+["']([^"']+)["']/
-      info[:default_version] = $1
-    when /^\s*deprecated/
-      info[:deprecated] = true
-    when /^source url:\s*["']([^"']+)["']/
-      info[:source_url_template] = $1
-    when /^\s*source url:\s*["']([^"']+)["']/
-      info[:source_url_template] ||= $1
-    end
-  end
-
-  info
-end
-
-# ---------------------------------------------------------------------------
-# GitHub: fetch latest release tag via API
-# ---------------------------------------------------------------------------
-def check_github_releases(owner, repo)
-  uri = URI("https://api.github.com/repos/#{owner}/#{repo}/releases/latest")
-  req = Net::HTTP::Get.new(uri)
-  req["Accept"] = "application/vnd.github.v3+json"
-  req["User-Agent"] = "omnibus-software-version-checker"
-
-  resp = Net::HTTP.start(uri.host, uri.port, use_ssl: true) { |http| http.request(req) }
-  return nil unless resp.code == "200"
-
-  data = JSON.parse(resp.body)
-  tag = data["tag_name"]
-  # Strip common prefixes: v1.2.3 -> 1.2.3, R_1_2_3 -> 1.2.3
-  tag&.sub(/^v/, "")
-end
+# Suppress omnibus logging noise
+Omnibus.logger.level = :fatal
 
 # ---------------------------------------------------------------------------
 # GitHub: fetch tags and find highest semver
@@ -100,7 +62,7 @@ def check_github_tags(owner, repo, prefix: "v")
 end
 
 # ---------------------------------------------------------------------------
-# FTP/HTTP directory listing: find latest version from an index page
+# HTTP directory listing: find latest version from an index page
 # ---------------------------------------------------------------------------
 def check_http_directory(url, name_pattern)
   uri = URI(url)
@@ -110,7 +72,6 @@ def check_http_directory(url, name_pattern)
   end
   return nil unless resp.code == "200"
 
-  # Extract version numbers from filenames matching the pattern
   versions = resp.body.scan(name_pattern).filter_map do |match|
     ver = match.is_a?(Array) ? match.first : match
     begin
@@ -168,13 +129,13 @@ HTTP_SOURCES = {
   "cacerts" => { url: "https://curl.se/ca/", pattern: /cacert-(\d{4}-\d{2}-\d{2})\.pem/ },
 }.freeze
 
+DEPRECATED_COMMENT = "# expeditor/ignore: deprecated".freeze
+
 # ---------------------------------------------------------------------------
 # Check a single software for updates
 # ---------------------------------------------------------------------------
-def check_for_update(info)
-  name = info[:name]
-  current = info[:default_version]
-  return nil unless current
+def check_for_update(name, current_version)
+  return nil unless current_version
 
   latest = nil
 
@@ -186,19 +147,19 @@ def check_for_update(info)
     hs = HTTP_SOURCES[name]
     latest = check_http_directory(hs[:url], hs[:pattern])
   else
-    return nil # No checker configured for this software
+    return nil
   end
 
   return nil unless latest
 
   begin
-    if Gem::Version.new(latest) > Gem::Version.new(current)
-      { name: name, current: current, latest: latest }
+    if Gem::Version.new(latest) > Gem::Version.new(current_version)
+      { name: name, current: current_version, latest: latest }
     end
   rescue ArgumentError
     # Non-semver versions (e.g., dates for cacerts)
-    if latest > current
-      { name: name, current: current, latest: latest }
+    if latest > current_version
+      { name: name, current: current_version, latest: latest }
     end
   end
 rescue StandardError => e
@@ -292,7 +253,7 @@ def create_version_update_mr(update)
   end
 
   file_path = "config/software/#{name}.rb"
-  full_path = File.join(SOFTWARE_DIR, "#{name}.rb")
+  full_path = File.join(OmnibusSoftware.root, file_path)
   new_content = update_default_version(full_path, current, latest)
   return unless new_content
 
@@ -334,31 +295,42 @@ def create_version_update_mr(update)
 end
 
 # ---------------------------------------------------------------------------
+# Check if a software file has the deprecated comment marker
+# ---------------------------------------------------------------------------
+def deprecated_software?(name)
+  filepath = File.join(OmnibusSoftware.root, "config", "software", "#{name}.rb")
+  return false unless File.exist?(filepath)
+
+  File.foreach(filepath).any? { |line| line.include?(DEPRECATED_COMMENT) }
+end
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 filter = ARGV.first
-files = Dir.glob("#{SOFTWARE_DIR}/*.rb")
 
-puts "Checking #{files.length} software definitions for upstream updates..."
-puts ""
+puts "Loading software definitions via omnibus..."
 
 updates = []
 skipped = 0
+checked = 0
 
-files.each do |file|
-  info = parse_software(file)
+OmnibusSoftware.for_each_software do |software|
+  name = software.name
+  current_version = software.default_version
 
-  next if info[:deprecated]
-  next if filter && info[:name] != filter
+  next if filter && name != filter
+  next if deprecated_software?(name)
 
-  print "Checking #{info[:name]}..."
+  checked += 1
+  print "Checking #{name}..."
 
-  update = check_for_update(info)
+  update = check_for_update(name, current_version)
   if update
     puts " UPDATE AVAILABLE: #{update[:current]} -> #{update[:latest]}"
     updates << update
-  elsif info[:default_version] && (GITHUB_SOURCES.key?(info[:name]) || HTTP_SOURCES.key?(info[:name]))
-    puts " up to date (#{info[:default_version]})"
+  elsif current_version && (GITHUB_SOURCES.key?(name) || HTTP_SOURCES.key?(name))
+    puts " up to date (#{current_version})"
   else
     puts " skipped (no checker configured)"
     skipped += 1
@@ -367,14 +339,14 @@ end
 
 puts ""
 puts "=" * 60
-puts "Results: #{updates.length} updates found, #{skipped} skipped (no checker)"
+puts "Results: #{updates.length} updates found, #{checked} checked, #{skipped} skipped (no checker)"
 puts "=" * 60
 
 # Write report
 report = {
   checked_at: Time.now.utc.iso8601,
   updates: updates,
-  total_checked: files.length,
+  total_checked: checked,
   skipped: skipped,
 }
 

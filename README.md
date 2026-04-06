@@ -2,7 +2,7 @@
 
 [![Pipeline Status](https://gitlab.com/cinc-project/upstream/omnibus-software/badges/stable/cinc/pipeline.svg)](https://gitlab.com/cinc-project/upstream/omnibus-software/-/pipelines)
 
-This repository contains shared software descriptions, for use by any [Omnibus](https://github.com/chef/omnibus) project that needs them. It is maintained by the [CINC Project](https://cinc.sh) as a community fork.
+This repository contains shared software descriptions, for use by any [Omnibus](https://github.com/chef/omnibus) project that needs them. It is maintained by the [Cinc Project](https://cinc.sh) as a community fork.
 
 For more information on writing your own software definitions, please see [the Omnibus README](https://github.com/chef/omnibus#sharing-software-definitions).
 
@@ -98,7 +98,7 @@ The container will automatically be destroyed when you exit it without requiring
 ## License & Copyright
 
 - Copyright:: Copyright (c) 2012-2021 Chef Software, Inc.
-- Copyright:: Copyright (c) 2019-2026 CINC Project
+- Copyright:: Copyright (c) 2019-2026 Cinc Project
 - License:: Apache License, Version 2.0
 
 ```text
