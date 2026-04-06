@@ -397,11 +397,6 @@ if __FILE__ == $PROGRAM_NAME
     update = check_for_update(sw_name, strategy, current_version)
     if update
       puts " UPDATE AVAILABLE: #{update[:current]} -> #{update[:latest]}"
-      unless DRY_RUN
-        if update_local_file(sw_name, update[:current], update[:latest])
-          puts "  Updated config/software/#{sw_name}.rb"
-        end
-      end
       updates << update
     else
       puts " up to date (#{current_version})"
@@ -438,7 +433,12 @@ if __FILE__ == $PROGRAM_NAME
     updates.each { |u| puts "  #{u[:name]}: #{u[:current]} -> #{u[:latest]}" }
   elsif updates.any?
     puts ""
-    puts "Updated #{updates.length} software definition(s) locally."
+    puts "Updating local files..."
+    updates.each do |update|
+      if update_local_file(update[:name], update[:current], update[:latest])
+        puts "  Updated config/software/#{update[:name]}.rb"
+      end
+    end
     puts "Not in CI (no CI_JOB_TOKEN/CI_PROJECT_ID), skipping MR creation."
   end
 end # if __FILE__ == $PROGRAM_NAME
