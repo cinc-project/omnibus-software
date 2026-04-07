@@ -62,6 +62,17 @@ build do
   configure_command = ["./configure",
                        "--prefix=#{install_dir}/embedded"]
 
+  unless freebsd?
+    # ncurses is built with --enable-widec which only installs wide-character
+    # libraries (libncursesw, libtinfow). Additionally, --with-termlib splits
+    # termcap functions (tputs, tgetent, etc.) into a separate libtinfow.
+    # We must link against both libncursesw and libtinfow so bash's bundled
+    # readline can resolve all termcap symbols from the embedded libraries
+    # instead of picking up the non-wide system libtinfo.
+    env["LIBS"] = "-ltinfow"
+    configure_command << "bash_cv_termcap_lib=libncursesw"
+  end
+
   if freebsd?
     # On freebsd, you have to force static linking, otherwise the executable
     # will link against the system ncurses instead of ours.
