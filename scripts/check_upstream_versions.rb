@@ -47,6 +47,8 @@ DEPRECATED_COMMENT = "# expeditor/ignore: deprecated".freeze
 SOURCE_OVERRIDES = {
   # Non-GitHub downloads that should check via GitHub tags
   "libsodium" => { type: :github, owner: "jedisct1", repo: "libsodium", prefix: "" },
+  # Repo has tags for both cpanminus (1.7xxx) and App::cpanminus (1.9xxx)
+  "cpanminus" => { type: :github, owner: "miyagawa", repo: "cpanminus", prefix: "", version_filter: /^1\.7/ },
   "liblzma" => { type: :github, owner: "tukaani-project", repo: "xz", prefix: "v" },
   # GitHub tags use underscores (R_2_6_4) instead of dots in version
   "expat" => { type: :github, owner: "libexpat", repo: "libexpat", prefix: "R_", version_separator: "_" },
@@ -73,7 +75,7 @@ SKIP_VERSION_CHECK = %w{
 # ---------------------------------------------------------------------------
 # GitHub: fetch tags and find highest semver
 # ---------------------------------------------------------------------------
-def check_github_tags(owner, repo, prefix: "v", version_separator: ".")
+def check_github_tags(owner, repo, prefix: "v", version_separator: ".", version_filter: nil)
   uri = URI("https://api.github.com/repos/#{owner}/#{repo}/tags?per_page=100")
   req = Net::HTTP::Get.new(uri)
   req["Accept"] = "application/vnd.github.v3+json"
@@ -95,6 +97,7 @@ def check_github_tags(owner, repo, prefix: "v", version_separator: ".")
   end
 
   versions.reject { |v| v.include?("rc") || v.include?("beta") || v.include?("alpha") || v.include?("pre") }
+    .select { |v| version_filter.nil? || v.match?(version_filter) }
     .max_by { |v| Gem::Version.new(v) }
 end
 
@@ -189,7 +192,8 @@ def check_for_update(name, strategy, current_version)
     latest = check_github_tags(
       strategy[:owner], strategy[:repo],
       prefix: strategy[:prefix] || "v",
-      version_separator: strategy[:version_separator] || "."
+      version_separator: strategy[:version_separator] || ".",
+      version_filter: strategy[:version_filter]
     )
   elsif strategy[:type] == :http
     latest = check_http_directory(strategy[:url], strategy[:pattern])
