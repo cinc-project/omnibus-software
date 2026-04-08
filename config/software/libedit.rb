@@ -37,6 +37,12 @@ relative_path "libedit-#{version}"
 build do
   env = with_standard_compiler_flags(with_embedded_path)
 
+  # ncurses is built with --enable-widec and --with-termlib, which splits
+  # termcap functions into a separate libtinfow. We must explicitly link
+  # against libtinfow so libedit resolves termcap symbols from the embedded
+  # library instead of picking up the system libtinfo.
+  env["LIBS"] = "-ltinfow"
+
   update_config_guess
 
   command "./configure" \
