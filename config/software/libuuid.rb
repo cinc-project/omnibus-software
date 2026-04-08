@@ -17,27 +17,32 @@
 #
 
 name "libuuid"
-default_version "2.21"
+default_version "2.42"
 
 license "LGPL-2.1"
 license_file "COPYING"
 
 source url: "https://www.kernel.org/pub/linux/utils/util-linux/v#{version}/util-linux-#{version}.tar.gz"
-# We use the version in util-linux, and only build the libuuid subdirectory
 internal_source url: "#{ENV["ARTIFACTORY_REPO_URL"]}/#{name}/util-linux-#{version}.tar.gz",
                 authorization: "X-JFrog-Art-Api:#{ENV["ARTIFACTORY_TOKEN"]}"
 
-version "2.21" do
-  source md5: "4222aa8c2a1b78889e959a4722f1881a"
-end
+# version_list: url=https://www.kernel.org/pub/linux/utils/util-linux/ filter=v*.tar.gz
+
+version("2.42") { source sha256: "a27118475651ef3d8f0ef1f516121f20a3527e45234f55546f31832bba943768" }
 
 relative_path "util-linux-#{version}"
 
 build do
   env = with_standard_compiler_flags(with_embedded_path)
 
-  command "./configure --prefix=#{install_dir}/embedded", env: env
+  configure "--disable-all-programs", "--enable-libuuid", "--without-python",
+            "--disable-nls", "--disable-asciidoc", "--disable-poman",
+            "--disable-bash-completion", env: env
 
-  make "-j #{workers}", env: env, cwd: "#{project_dir}/libuuid"
-  make "-j #{workers} install", env: env, cwd: "#{project_dir}/libuuid"
+  make "-j #{workers}", env: env
+  make "-j #{workers} install", env: env
+
+  # Remove man pages installed by util-linux
+  delete "#{install_dir}/embedded/share/man/man3/uuid*"
+  delete "#{install_dir}/embedded/share/man/man5/terminal-colors.d.5"
 end
