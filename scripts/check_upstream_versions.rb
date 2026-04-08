@@ -46,7 +46,7 @@ DEPRECATED_COMMENT = "# expeditor/ignore: deprecated".freeze
 # ---------------------------------------------------------------------------
 SOURCE_OVERRIDES = {
   # Non-GitHub downloads that should check via GitHub tags
-  "libsodium" => { type: :github, owner: "jedisct1", repo: "libsodium", prefix: "" },
+  "libsodium" => { type: :github, owner: "jedisct1", repo: "libsodium", prefix: "", suffix: "-RELEASE" },
   # Repo has tags for both cpanminus (1.7xxx) and App::cpanminus (1.9xxx)
   "cpanminus" => { type: :github, owner: "miyagawa", repo: "cpanminus", prefix: "", version_filter: /^1\.7/ },
   "liblzma" => { type: :github, owner: "tukaani-project", repo: "xz", prefix: "v" },
@@ -77,7 +77,7 @@ SKIP_VERSION_CHECK = %w{
 # ---------------------------------------------------------------------------
 # GitHub: fetch tags and find highest semver
 # ---------------------------------------------------------------------------
-def check_github_tags(owner, repo, prefix: "v", version_separator: ".", version_filter: nil)
+def check_github_tags(owner, repo, prefix: "v", suffix: nil, version_separator: ".", version_filter: nil)
   uri = URI("https://api.github.com/repos/#{owner}/#{repo}/tags?per_page=100")
   req = Net::HTTP::Get.new(uri)
   req["Accept"] = "application/vnd.github.v3+json"
@@ -89,6 +89,7 @@ def check_github_tags(owner, repo, prefix: "v", version_separator: ".", version_
   tags = JSON.parse(resp.body).map { |t| t["name"] }
   versions = tags.filter_map do |tag|
     cleaned = tag.sub(/^#{Regexp.escape(prefix)}/, "")
+    cleaned = cleaned.sub(/#{Regexp.escape(suffix)}$/, "") if suffix
     cleaned = cleaned.tr(version_separator, ".") if version_separator != "."
     begin
       Gem::Version.new(cleaned)
@@ -194,6 +195,7 @@ def check_for_update(name, strategy, current_version)
     latest = check_github_tags(
       strategy[:owner], strategy[:repo],
       prefix: strategy[:prefix] || "v",
+      suffix: strategy[:suffix],
       version_separator: strategy[:version_separator] || ".",
       version_filter: strategy[:version_filter]
     )

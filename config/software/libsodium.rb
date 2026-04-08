@@ -17,7 +17,7 @@
 
 # We use the version in util-linux, and only build the libuuid subdirectory
 name "libsodium"
-default_version "1.0.18"
+default_version "1.0.21"
 
 license "ISC"
 license_file "LICENSE"
@@ -25,8 +25,7 @@ skip_transitive_dependency_licensing true
 
 # version_list: url=https://download.libsodium.org/libsodium/releases/ filter=*.tar.gz
 
-version("1.0.17") { source sha256: "0cc3dae33e642cc187b5ceb467e0ad0e1b51dcba577de1190e9ffa17766ac2b1" }
-version("1.0.18") { source sha256: "6f504490b342a4f8a4c4a02fc9b866cbef8622d5df4e5452b46be121e46636c1" }
+version("1.0.21") { source sha256: "9e4285c7a419e82dedb0be63a72eea357d6943bc3e28e6735bf600dd4883feaf" }
 
 source url: "https://download.libsodium.org/libsodium/releases/libsodium-#{version}.tar.gz"
 internal_source url: "#{ENV["ARTIFACTORY_REPO_URL"]}/#{name}/#{name}-#{version}.tar.gz",
