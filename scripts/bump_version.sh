@@ -1,14 +1,22 @@
 #!/bin/bash
 #
 # Bumps the VERSION file using YY.MM.BUILD format and creates a git tag.
+# BUILD resets to 0 when the year or month changes.
 # Intended to be called from GitLab CI on merges to stable/cinc.
 #
 set -euo pipefail
 
 YEAR=$(date +"%y" | sed -e 's/^0//')
 MONTH=$(date +"%m" | sed -e 's/^0//')
+OLD_YEAR=$(cut -f1 -d. < VERSION)
+OLD_MONTH=$(cut -f2 -d. < VERSION)
 OLD_BUILD=$(cut -f3 -d. < VERSION)
-NEW_BUILD=$((OLD_BUILD + 1))
+
+if [[ "${YEAR}" != "${OLD_YEAR}" || "${MONTH}" != "${OLD_MONTH}" ]]; then
+  NEW_BUILD=0
+else
+  NEW_BUILD=$((OLD_BUILD + 1))
+fi
 NEW_VERSION="${YEAR}.${MONTH}.${NEW_BUILD}"
 
 echo "Bumping version from $(cat VERSION) to ${NEW_VERSION}"
