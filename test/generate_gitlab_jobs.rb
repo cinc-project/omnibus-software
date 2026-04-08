@@ -83,7 +83,7 @@ def generate_jobs(files, build_all)
     versions.each do |ver|
       next if software == "chef" && ver == "local_source"
 
-      skip_health_check = HEALTH_CHECK_SKIP_LIST.include?(software) ? "1" : ""
+      skip_health_check = HEALTH_CHECK_SKIP_LIST.include?(software) ? "true" : ""
       safe_ver = ver.gsub("/", "_")
 
       job_name = "build:#{software}_#{safe_ver}"
