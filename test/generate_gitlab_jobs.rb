@@ -150,6 +150,8 @@ def generate_jobs(files, build_all)
         }
 
         builds.each do |build_job, opts|
+          fips = opts[:suffix] == "-fips"
+
           OPENSSL_VALIDATION_TYPES.each do |type|
             if type == "ruby"
               validate_dep = opts[:ruby_build]
@@ -159,15 +161,18 @@ def generate_jobs(files, build_all)
               validate_script = "test/validation/validate_openssl_#{type}.sh"
             end
 
+            variables = {
+              "SOFTWARE" => software,
+              "VERSION" => ver,
+              "CI" => "true",
+            }
+            variables["OMNIBUS_FIPS_MODE"] = "true" if fips
+
             jobs["validate:openssl#{opts[:suffix]}-#{type}_#{safe_ver}"] = {
               "extends" => ".validate",
               "cache" => { "key" => "openssl-validate#{opts[:suffix]}-#{type}-#{safe_ver}" },
               "needs" => [validate_dep],
-              "variables" => {
-                "SOFTWARE" => software,
-                "VERSION" => ver,
-                "CI" => "true",
-              },
+              "variables" => variables,
               "script" => [validate_script],
             }
           end

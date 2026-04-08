@@ -50,10 +50,14 @@ else
 
     echo ""
     echo "--- Testing FIPS provider availability ---"
-    if echo "$providers_output" | grep -qi "openssl fips provider"; then
-        echo "FIPS provider is available"
+    if [ "${OMNIBUS_FIPS_MODE}" = "true" ]; then
+        if echo "$providers_output" | grep -qi "openssl fips provider"; then
+            echo "FIPS provider is available"
+        else
+            FAILURES+=("FIPS provider not available - 'OpenSSL FIPS Provider' not found in providers output")
+        fi
     else
-        FAILURES+=("FIPS provider not available - 'OpenSSL FIPS Provider' not found in providers output")
+        echo "Skipping FIPS provider check (non-FIPS build)"
     fi
 fi
 

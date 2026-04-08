@@ -296,6 +296,19 @@ RSpec.describe "generate_gitlab_jobs" do
         expect(jobs["validate:openssl-fips-ruby_3.5.5"]["needs"]).to eq(["build:openssl-fips-ruby_3.5.5"])
       end
 
+      it "fips validate jobs include OMNIBUS_FIPS_MODE" do
+        path = write_software("openssl", <<~RUBY)
+          name "openssl"
+          default_version "3.5.5"
+        RUBY
+        jobs = generate_jobs([path], true)
+
+        %w{executable ruby providers}.each do |type|
+          expect(jobs["validate:openssl-fips-#{type}_3.5.5"]["variables"]["OMNIBUS_FIPS_MODE"]).to eq("true")
+          expect(jobs["validate:openssl-#{type}_3.5.5"]["variables"]).not_to have_key("OMNIBUS_FIPS_MODE")
+        end
+      end
+
       it "does not generate validation jobs for non-openssl software" do
         path = write_software("curl", <<~RUBY)
           name "curl"
