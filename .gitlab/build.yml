@@ -17,3 +17,13 @@
     expire_in: 1mo
     paths:
       - test/pkg/
+
+.validate:
+  stage: validate
+  image: cincproject/omnibus-debian
+  tags:
+    - docker-x86_64
+  before_script:
+    - dpkg -i test/pkg/test*.deb || apt-get install -fy
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "parent_pipeline"

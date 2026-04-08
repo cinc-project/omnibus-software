@@ -100,22 +100,82 @@ def generate_jobs(files, build_all)
         },
       }
 
-      if software == "openssl" && Gem::Version.new(ver) >= Gem::Version.new("3.0.9")
-        OPENSSL_VALIDATION_TYPES.each do |type|
-          jobs["validate:openssl-#{type}_#{safe_ver}"] = {
-            "extends" => ".build",
-            "cache" => { "key" => "openssl-validate-#{type}-#{safe_ver}" },
-            "needs" => [job_name],
-            "variables" => {
+      if software == "openssl"
+        # FIPS-enabled build job
+        fips_job_name = "build:#{software}-fips_#{safe_ver}"
+        jobs[fips_job_name] = {
+          "extends" => ".build",
+          "cache" => {
+            "key" => "#{software}-fips-#{safe_ver}",
+          },
+          "variables" => {
+            "SOFTWARE" => software,
+            "VERSION" => ver,
+            "CI" => "true",
+            "OMNIBUS_FIPS_MODE" => "true",
+            "SKIP_HEALTH_CHECK" => skip_health_check,
+          },
+        }
+
+        # Ruby build jobs (builds Ruby linked against specific OpenSSL version)
+        ruby_build_name = "build:openssl-ruby_#{safe_ver}"
+        jobs[ruby_build_name] = {
+          "extends" => ".build",
+          "cache" => { "key" => "openssl-ruby-#{safe_ver}" },
+          "variables" => {
+            "SOFTWARE" => "ruby",
+            "OPENSSL_VERSION" => ver,
+            "CI" => "true",
+            "SKIP_HEALTH_CHECK" => "",
+          },
+        }
+
+        ruby_fips_build_name = "build:openssl-fips-ruby_#{safe_ver}"
+        jobs[ruby_fips_build_name] = {
+          "extends" => ".build",
+          "cache" => { "key" => "openssl-fips-ruby-#{safe_ver}" },
+          "variables" => {
+            "SOFTWARE" => "ruby",
+            "OPENSSL_VERSION" => ver,
+            "CI" => "true",
+            "OMNIBUS_FIPS_MODE" => "true",
+            "SKIP_HEALTH_CHECK" => "",
+          },
+        }
+
+        # Validation jobs for both non-fips and fips builds
+        builds = {
+          job_name => { suffix: "", ruby_build: ruby_build_name },
+          fips_job_name => { suffix: "-fips", ruby_build: ruby_fips_build_name },
+        }
+
+        builds.each do |build_job, opts|
+          fips = opts[:suffix] == "-fips"
+
+          OPENSSL_VALIDATION_TYPES.each do |type|
+            if type == "ruby"
+              validate_dep = opts[:ruby_build]
+              validate_script = "test/validation/validate_openssl_ruby.rb"
+            else
+              validate_dep = build_job
+              validate_script = "test/validation/validate_openssl_#{type}.sh"
+            end
+
+            variables = {
               "SOFTWARE" => software,
               "VERSION" => ver,
               "CI" => "true",
-            },
-            "script" => [
-              "cd test",
-              "bash ../test/validation/build_and_validate_openssl_#{type}.sh",
-            ],
-          }
+            }
+            variables["OMNIBUS_FIPS_MODE"] = "true" if fips
+
+            jobs["validate:openssl#{opts[:suffix]}-#{type}_#{safe_ver}"] = {
+              "extends" => ".validate",
+              "cache" => { "key" => "openssl-validate#{opts[:suffix]}-#{type}-#{safe_ver}" },
+              "needs" => [validate_dep],
+              "variables" => variables,
+              "script" => [validate_script],
+            }
+          end
         end
       end
     end
@@ -141,6 +201,7 @@ if __FILE__ == $PROGRAM_NAME
     "include" => [
       "local" => ".gitlab/build.yml",
     ],
+    "stages" => %w{build validate},
   }
 
   jobs = generate_jobs(files, build_all)

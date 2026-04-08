@@ -43,18 +43,23 @@ exec(omnibus_ruby, "-e", <<~RUBY_CODE)
 
   puts "OpenSSL::OPENSSL_VERSION: \#{OpenSSL::OPENSSL_VERSION}"
   puts "--- Testing FIPS mode capability ---"
+  fips_required = ENV['OMNIBUS_FIPS_MODE'] == 'true'
   begin
     if OpenSSL.respond_to?(:fips_mode)
       puts "FIPS mode available: \#{OpenSSL.fips_mode}"
-      puts "Attempting to enable FIPS mode..."
-      # Try to enable FIPS mode (may fail if FIPS provider not configured)
-      begin
-        OpenSSL.fips_mode = true
-        puts "FIPS mode enabled successfully: \#{OpenSSL.fips_mode}"
-        OpenSSL.fips_mode = false
-        puts "FIPS mode disabled successfully: \#{OpenSSL.fips_mode}"
-      rescue => e
-        puts "FIPS mode activation failed (expected if FIPS provider not configured): \#{e.message}"
+      if fips_required
+        puts "Attempting to enable FIPS mode..."
+        begin
+          OpenSSL.fips_mode = true
+          puts "FIPS mode enabled successfully: \#{OpenSSL.fips_mode}"
+          OpenSSL.fips_mode = false
+          puts "FIPS mode disabled successfully: \#{OpenSSL.fips_mode}"
+        rescue => e
+          puts "FIPS mode activation failed: \#{e.message}"
+          errors << "FIPS mode activation failed (FIPS build): \#{e.message}"
+        end
+      else
+        puts "Skipping FIPS mode activation test (non-FIPS build)"
       end
     else
       puts "FIPS mode methods not available (OpenSSL < 3.0 or Ruby OpenSSL gem limitation)"
