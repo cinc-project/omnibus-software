@@ -206,41 +206,55 @@ RSpec.describe "generate_gitlab_jobs" do
     # OpenSSL validation jobs
     # -----------------------------------------------------------------------
     context "openssl validation jobs" do
-      it "generates validation jobs for openssl >= 3.0.9" do
+      it "generates build and fips build jobs for openssl" do
         path = write_software("openssl", <<~RUBY)
           name "openssl"
-          default_version "3.4.1"
+          default_version "3.5.5"
         RUBY
         jobs = generate_jobs([path], true)
 
-        expect(jobs).to have_key("build:openssl_3.4.1")
-        expect(jobs).to have_key("validate:openssl-executable_3.4.1")
-        expect(jobs).to have_key("validate:openssl-ruby_3.4.1")
-        expect(jobs).to have_key("validate:openssl-providers_3.4.1")
+        expect(jobs).to have_key("build:openssl_3.5.5")
+        expect(jobs).to have_key("build:openssl-fips_3.5.5")
+        expect(jobs["build:openssl-fips_3.5.5"]["variables"]["OMNIBUS_FIPS_MODE"]).to eq("true")
       end
 
-      it "validation jobs depend on the build job" do
+      it "generates validation jobs for both non-fips and fips builds" do
         path = write_software("openssl", <<~RUBY)
           name "openssl"
-          default_version "3.4.1"
+          default_version "3.5.5"
         RUBY
         jobs = generate_jobs([path], true)
 
         %w{executable ruby providers}.each do |type|
-          job = jobs["validate:openssl-#{type}_3.4.1"]
-          expect(job["needs"]).to eq(["build:openssl_3.4.1"])
+          expect(jobs).to have_key("validate:openssl-#{type}_3.5.5")
+          expect(jobs).to have_key("validate:openssl-fips-#{type}_3.5.5")
         end
       end
 
-      it "does not generate validation jobs for openssl < 3.0.9" do
+      it "validation jobs depend on the correct build job" do
         path = write_software("openssl", <<~RUBY)
           name "openssl"
-          default_version "1.1.1w"
+          default_version "3.5.5"
         RUBY
         jobs = generate_jobs([path], true)
 
-        expect(jobs).to have_key("build:openssl_1.1.1w")
-        expect(jobs.keys.select { |k| k.start_with?("validate:") }).to be_empty
+        %w{executable ruby providers}.each do |type|
+          expect(jobs["validate:openssl-#{type}_3.5.5"]["needs"]).to eq(["build:openssl_3.5.5"])
+          expect(jobs["validate:openssl-fips-#{type}_3.5.5"]["needs"]).to eq(["build:openssl-fips_3.5.5"])
+        end
+      end
+
+      it "fips validation jobs set OMNIBUS_FIPS_MODE" do
+        path = write_software("openssl", <<~RUBY)
+          name "openssl"
+          default_version "3.5.5"
+        RUBY
+        jobs = generate_jobs([path], true)
+
+        %w{executable ruby providers}.each do |type|
+          expect(jobs["validate:openssl-fips-#{type}_3.5.5"]["variables"]["OMNIBUS_FIPS_MODE"]).to eq("true")
+          expect(jobs["validate:openssl-#{type}_3.5.5"]["variables"]).not_to have_key("OMNIBUS_FIPS_MODE")
+        end
       end
 
       it "does not generate validation jobs for non-openssl software" do

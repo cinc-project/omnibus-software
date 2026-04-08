@@ -100,7 +100,24 @@ def generate_jobs(files, build_all)
         },
       }
 
-      if software == "openssl" && Gem::Version.new(ver) >= Gem::Version.new("3.0.9")
+      if software == "openssl"
+        # FIPS-enabled build job
+        fips_job_name = "build:#{software}-fips_#{safe_ver}"
+        jobs[fips_job_name] = {
+          "extends" => ".build",
+          "cache" => {
+            "key" => "#{software}-fips-#{safe_ver}",
+          },
+          "variables" => {
+            "SOFTWARE" => software,
+            "VERSION" => ver,
+            "CI" => "true",
+            "OMNIBUS_FIPS_MODE" => "true",
+            "SKIP_HEALTH_CHECK" => skip_health_check,
+          },
+        }
+
+        # Validation jobs for both non-fips and fips builds
         OPENSSL_VALIDATION_TYPES.each do |type|
           jobs["validate:openssl-#{type}_#{safe_ver}"] = {
             "extends" => ".build",
@@ -110,6 +127,22 @@ def generate_jobs(files, build_all)
               "SOFTWARE" => software,
               "VERSION" => ver,
               "CI" => "true",
+            },
+            "script" => [
+              "cd test",
+              "bash ../test/validation/build_and_validate_openssl_#{type}.sh",
+            ],
+          }
+
+          jobs["validate:openssl-fips-#{type}_#{safe_ver}"] = {
+            "extends" => ".build",
+            "cache" => { "key" => "openssl-validate-fips-#{type}-#{safe_ver}" },
+            "needs" => [fips_job_name],
+            "variables" => {
+              "SOFTWARE" => software,
+              "VERSION" => ver,
+              "CI" => "true",
+              "OMNIBUS_FIPS_MODE" => "true",
             },
             "script" => [
               "cd test",

@@ -68,7 +68,7 @@ SOURCE_OVERRIDES = {
 SKIP_VERSION_CHECK = %w{
   server-open-jre ruby-msys2-devkit ruby-windows-devkit ruby-windows-devkit-bash
   nodejs-binary ibm-jre jre-from-jdk
-  elasticsearch opensearch openssl-fips
+  elasticsearch opensearch
   go
 }.freeze
 
