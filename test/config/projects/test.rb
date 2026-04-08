@@ -12,3 +12,7 @@ dependency ENV["SOFTWARE"]
 if ENV["VERSION"]
   override ENV["SOFTWARE"].to_sym, version: ENV["VERSION"]
 end
+
+if ENV["OPENSSL_VERSION"]
+  override :openssl, version: ENV["OPENSSL_VERSION"]
+end
