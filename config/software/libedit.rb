@@ -37,16 +37,21 @@ relative_path "libedit-#{version}"
 build do
   env = with_standard_compiler_flags(with_embedded_path)
 
-  # ncurses is built with --enable-widec and --with-termlib, which splits
-  # termcap functions into a separate libtinfow. We must explicitly link
-  # against libtinfow so libedit resolves termcap symbols from the embedded
-  # library instead of picking up the system libtinfo.
-  env["LIBS"] = "-ltinfow"
+  # ncurses is built with --with-termlib, which places tgetent in the
+  # separate libtinfo(w) library.  libedit's configure probes for
+  # tgetent in -lncurses → -lcurses → -ltermcap → -ltinfo and uses the
+  # first hit.  The system's -lcurses uses a linker script that
+  # resolves tgetent via system libtinfo, so we must skip those checks
+  # and let configure reach -ltinfo, which the ncurses build provides
+  # as a compatibility symlink to the embedded libtinfow.
 
   update_config_guess
 
   command "./configure" \
-          " --prefix=#{install_dir}/embedded", env: env
+          " --prefix=#{install_dir}/embedded" \
+          " ac_cv_lib_ncurses_tgetent=no" \
+          " ac_cv_lib_curses_tgetent=no" \
+          " ac_cv_lib_termcap_tgetent=no", env: env
 
   make "-j #{workers}", env: env
   make "-j #{workers} install", env: env

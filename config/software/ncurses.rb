@@ -95,4 +95,14 @@ build do
   # binaries, which doesn't happen to be a problem since we don't
   # utilize the ncurses binaries in private-chef (or oss chef)
   make "-j #{workers} install", env: env
+
+  # With --enable-widec and --with-termlib the wide-character build only
+  # installs libncursesw and libtinfow.  Many configure scripts (e.g.
+  # libedit, bash) probe for -lncurses or -ltinfo by name.  Create
+  # non-wide compatibility symlinks so those checks resolve to the
+  # embedded wide-character libraries instead of falling through to the
+  # system.  The linker records the real SONAME (libncursesw.so.6 /
+  # libtinfow.so.6), so at runtime the embedded libraries are loaded.
+  link "#{install_dir}/embedded/lib/libncursesw.so", "#{install_dir}/embedded/lib/libncurses.so"
+  link "#{install_dir}/embedded/lib/libtinfow.so", "#{install_dir}/embedded/lib/libtinfo.so"
 end
