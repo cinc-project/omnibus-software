@@ -19,14 +19,7 @@ default_version "1.3.2"
 
 # version_list: url=https://zlib.net/fossils/ filter=*.tar.gz
 
-version("1.3.2")  { source sha256: "bb329a0a2cd0274d05519d61c667c062e06990d72e125ee2dfa8de64f0119d16" }
-version("1.3.1")  { source sha256: "9a93b2b7dfdac77ceba5a558a580e74667dd6fede4585b91eefb60f03b72df23" }
-version("1.3")    { source sha256: "ff0ba4c292013dbc27530b3a81e1f9a813cd39de01ca5e0f8bf355702efa593e" }
-version("1.2.13") { source sha256: "b3a24de97a8fdbc835b9833169501030b8977031bcb54b3b3ac13740f846ab30" }
-version("1.2.12") { source sha256: "91844808532e5ce316b3c010929493c0244f3d37593afd6de04f71821d5136d9" }
-version("1.2.11") { source sha256: "c3e5e9fdd5004dcb542feda5ee4f0ff0744628baf8ed2dd5d66f8ca1197cb1a1" }
-version("1.2.8")  { source sha256: "36658cb768a54c1d4dec43c3116c27ed893e88b02ecfcb44f2166f9c0b7f2a0d" }
-version("1.2.6")  { source sha256: "21235e08552e6feba09ea5e8d750805b3391c62fb81c71a235c0044dc7a8a61b" }
+version("1.3.2") { source sha256: "bb329a0a2cd0274d05519d61c667c062e06990d72e125ee2dfa8de64f0119d16" }
 
 source url: "https://zlib.net/fossils/zlib-#{version}.tar.gz"
 internal_source url: "#{ENV["ARTIFACTORY_REPO_URL"]}/#{name}/#{name}-#{version}.tar.gz",
@@ -42,11 +35,7 @@ build do
   if windows?
     env = with_standard_compiler_flags(with_embedded_path)
 
-    if version.satisfies?(">= 1.3")
-      patch source: "zlib-1.3-windows-relocate.patch", env: env
-    else
-      patch source: "zlib-windows-relocate.patch", env: env
-    end
+    patch source: "zlib-1.3-windows-relocate.patch", env: env
 
     # We can't use the top-level Makefile. Instead, the developers have made
     # an organic, artisanal, hand-crafted Makefile.gcc for us which takes a few
@@ -80,10 +69,9 @@ build do
     # configure script cannot handle.
     # TODO: Do other OSes need this?  Is this strictly a mac thing?
     env = with_standard_compiler_flags
-    if freebsd? || solaris2?
+    if freebsd?
       # FreeBSD 10+ gets cranky if zlib is not compiled in a
       # position-independent way.
-      # zlib 1.2.12 introduced the same problem on Solaris.
       env["CFLAGS"] << " -fPIC"
     end
 
