@@ -56,7 +56,11 @@ SOURCE_OVERRIDES = {
   "openssl" => { type: :http, url: "https://openssl-library.org/source/", pattern: /openssl-(3\.\d+\.\d+)\.tar\.gz/ },
   "curl" => { type: :http, url: "https://curl.se/download/", pattern: /curl-(\d+\.\d+\.\d+)\.tar\.gz/ },
   "bzip2" => { type: :http, url: "https://sourceware.org/pub/bzip2/", pattern: /bzip2-(\d+\.\d+\.\d+)\.tar\.gz/ },
-  "ruby" => { type: :http, url: "https://cache.ruby-lang.org/pub/ruby/3.4/", pattern: /ruby-(3\.4\.\d+)\.tar\.gz/ },
+  "ruby" => [
+    { type: :http, url: "https://cache.ruby-lang.org/pub/ruby/3.1/", pattern: /ruby-(3\.1\.\d+)\.tar\.gz/ },
+    { type: :http, url: "https://cache.ruby-lang.org/pub/ruby/3.2/", pattern: /ruby-(3\.2\.\d+)\.tar\.gz/ },
+    { type: :http, url: "https://cache.ruby-lang.org/pub/ruby/3.4/", pattern: /ruby-(3\.4\.\d+)\.tar\.gz/ },
+  ],
   "cacerts" => { type: :http, url: "https://curl.se/ca/", pattern: /cacert-(\d{4}-\d{2}-\d{2})\.pem/ },
   "pcre" => { type: :http, url: "https://sourceforge.net/projects/pcre/files/pcre/", pattern: %r{/pcre/(\d+\.\d+)/} },
   # GNOME: version discovery via cache.json rather than directory listing
@@ -217,6 +221,43 @@ def check_for_update(name, strategy, current_version)
 rescue StandardError => e
   $stderr.puts "Error checking #{name}: #{e.message}"
   nil
+end
+
+# ---------------------------------------------------------------------------
+# Extract all version("X.Y.Z") entries from a software definition file
+# ---------------------------------------------------------------------------
+def extract_file_versions(filepath)
+  File.read(filepath).scan(/^version\("([^"]+)"\)/).flatten
+rescue StandardError
+  []
+end
+
+# ---------------------------------------------------------------------------
+# Find the highest existing version in a file that matches a regex pattern
+# ---------------------------------------------------------------------------
+def find_current_stream_version(filepath, pattern)
+  versions = extract_file_versions(filepath)
+  versions.select { |v| v.match?(pattern) }
+    .max_by { |v| Gem::Version.new(v) }
+rescue ArgumentError
+  nil
+end
+
+# ---------------------------------------------------------------------------
+# Check multiple version streams for a single software (e.g. ruby 3.1/3.2/3.4)
+# ---------------------------------------------------------------------------
+def check_multi_stream(name, strategies, filepath)
+  updates = []
+  strategies.each do |strategy|
+    # Extract the stream pattern from the regex (e.g., /ruby-(3\.4\.\d+)\.tar\.gz/)
+    stream_pattern = strategy[:pattern]
+    current = find_current_stream_version(filepath, stream_pattern)
+    next unless current
+
+    update = check_for_update(name, strategy, current)
+    updates << update if update
+  end
+  updates
 end
 
 # ---------------------------------------------------------------------------
@@ -591,12 +632,24 @@ if __FILE__ == $PROGRAM_NAME
     checked += 1
     print "Checking #{sw_name}..."
 
-    update = check_for_update(sw_name, strategy, current_version)
-    if update
-      puts " UPDATE AVAILABLE: #{update[:current]} -> #{update[:latest]}"
-      updates << update
+    if strategy.is_a?(Array)
+      stream_updates = check_multi_stream(sw_name, strategy, filepath)
+      if stream_updates.any?
+        stream_updates.each do |update|
+          puts " UPDATE AVAILABLE: #{update[:current]} -> #{update[:latest]}"
+          updates << update
+        end
+      else
+        puts " up to date (#{current_version})"
+      end
     else
-      puts " up to date (#{current_version})"
+      update = check_for_update(sw_name, strategy, current_version)
+      if update
+        puts " UPDATE AVAILABLE: #{update[:current]} -> #{update[:latest]}"
+        updates << update
+      else
+        puts " up to date (#{current_version})"
+      end
     end
   end
 
