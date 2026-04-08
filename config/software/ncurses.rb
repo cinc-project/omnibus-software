@@ -26,12 +26,6 @@ dependency "config_guess"
 
 # versions_list: https://ftp.osuosl.org/pub/gnu/ncurses/ filter=*.tar.gz
 version("6.6") { source sha256: "355b4cbbed880b0381a04c46617b7656e362585d52e9cf84a67e2009b749ff11" }
-version("6.5") { source sha256: "136d91bc269a9a5785e5f9e980bc76ab57428f604ce3e5a5a90cebc767971cc6" }
-version("6.4") { source sha256: "6931283d9ac87c5073f30b6290c4c75f21632bb4fc3603ac8100812bed248159" }
-version("6.3") { source sha256: "97fc51ac2b085d4cde31ef4d2c3122c21abc217e9090a43a30fc5ec21684e059" }
-version("6.2") { source sha256: "30306e0c76e0f9f1f0de987cf1c82a5c21e1ce6568b9227f7da5b71cbea86c9d" }
-version("6.1") { source sha256: "aa057eeeb4a14d470101eff4597d5833dcef5965331be3528c08d99cebaa0d17" }
-version("5.9") { source sha256: "9046298fb440324c9d4135ecea7879ffed8546dd1b58e59430ea07a4633f563b" }
 
 source url: "https://ftp.osuosl.org/pub/gnu/ncurses/ncurses-#{version}.tar.gz"
 internal_source url: "#{ENV["ARTIFACTORY_REPO_URL"]}/#{name}/#{name}-#{version}.tar.gz",
@@ -58,33 +52,7 @@ build do
   env = with_standard_compiler_flags(with_embedded_path)
   env.delete("CPPFLAGS")
 
-  if smartos?
-    # SmartOS is Illumos Kernel, plus NetBSD userland with a GNU toolchain.
-    # These patches are taken from NetBSD pkgsrc and provide GCC 4.7.0
-    # compatibility:
-    # http://ftp.netbsd.org/pub/pkgsrc/current/pkgsrc/devel/ncurses/patches/
-    patch source: "patch-aa", plevel: 0, env: env
-    patch source: "patch-ab", plevel: 0, env: env
-    patch source: "patch-ac", plevel: 0, env: env
-    patch source: "patch-ad", plevel: 0, env: env
-    patch source: "patch-cxx_cursesf.h", plevel: 0, env: env
-    patch source: "patch-cxx_cursesm.h", plevel: 0, env: env
-
-    # Chef patches - <sean@sean.io>
-    # The configure script from the pristine tarball detects xopen_source_extended incorrectly.
-    # Manually working around a false positive.
-    patch source: "ncurses-5.9-solaris-xopen_source_extended-detection.patch", plevel: 0, env: env
-  end
-
   update_config_guess
-
-  # AIX's old version of patch doesn't like the patches here
-  unless aix?
-    if version == "5.9"
-      # Patch to add support for GCC 5, doesn't break previous versions
-      patch source: "ncurses-5.9-gcc-5.patch", plevel: 1, env: env
-    end
-  end
 
   if mac_os_x? ||
       # Clang became the default compiler in FreeBSD 10+
@@ -99,10 +67,6 @@ build do
     patch source: "ncurses-clang.patch", env: env
   end
 
-  if openbsd?
-    patch source: "patch-ncurses_tinfo_lib__baudrate.c", plevel: 0, env: env
-  end
-
   configure_command = [
     "./configure",
     "--prefix=#{install_dir}/embedded",
@@ -115,31 +79,7 @@ build do
     "--without-manpages",
   ]
 
-  if aix?
-    # AIX kinda needs 5.9-20140621 or later
-    # because of a naming snafu in shared library naming.
-    # see http://invisible-island.net/ncurses/NEWS.html#t20140621
-
-    # let libtool deal with library silliness
-    configure_command << "--with-libtool=\"#{install_dir}/embedded/bin/libtool\""
-
-    # stick with just the shared libs on AIX
-    configure_command << "--without-normal"
-
-    # ncurses's ./configure incorrectly
-    # "figures out" ARFLAGS if you try
-    # to set them yourself
-    env.delete("ARFLAGS")
-
-    # use gnu install from the coreutils IBM rpm package
-    env["INSTALL"] = "/opt/freeware/bin/install"
-  end
-
   command configure_command.join(" "), env: env
-
-  # unfortunately, libtool may try to link to libtinfo
-  # before it has been assembled; so we have to build in serial
-  make "libs", env: env if aix?
 
   make "-j #{workers}", env: env
   make "-j #{workers} install", env: env
@@ -149,16 +89,10 @@ build do
   configure_command << "--enable-widec"
 
   command configure_command.join(" "), env: env
-  make "libs", env: env if aix?
   make "-j #{workers}", env: env
 
   # Installing the non-wide libraries will also install the non-wide
   # binaries, which doesn't happen to be a problem since we don't
   # utilize the ncurses binaries in private-chef (or oss chef)
   make "-j #{workers} install", env: env
-
-  # Ensure embedded ncurses wins in the LD search path
-  if smartos?
-    link "#{install_dir}/embedded/lib/libcurses.so", "#{install_dir}/embedded/lib/libcurses.so.1"
-  end
 end
