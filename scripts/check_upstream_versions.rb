@@ -62,6 +62,8 @@ SOURCE_OVERRIDES = {
   # GNOME: version discovery via cache.json rather than directory listing
   "libxml2" => { type: :http, url: "https://download.gnome.org/sources/libxml2/cache.json", pattern: /(\d+\.\d+\.\d+)/ },
   "libxslt" => { type: :http, url: "https://download.gnome.org/sources/libxslt/cache.json", pattern: /(\d+\.\d+\.\d+)/ },
+  # Perl uses even minor versions for stable, odd for development
+  "perl" => { type: :http, url: "https://www.cpan.org/src/5.0/", pattern: /perl-(5\.\d*[02468]\.\d+)\.tar\.gz/ },
 }.freeze
 
 # Software to skip (binary downloads, platform-specific, not meaningful to check)
