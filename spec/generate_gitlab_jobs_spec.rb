@@ -180,7 +180,7 @@ RSpec.describe "generate_gitlab_jobs" do
         default_version "2024-03-11"
       RUBY
       jobs = generate_jobs([path], true)
-      expect(jobs["build:cacerts_2024-03-11"]["variables"]["SKIP_HEALTH_CHECK"]).to eq("1")
+      expect(jobs["build:cacerts_2024-03-11"]["variables"]["SKIP_HEALTH_CHECK"]).to eq("true")
     end
 
     it "leaves SKIP_HEALTH_CHECK empty for normal software" do
