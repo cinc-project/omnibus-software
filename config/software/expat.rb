@@ -15,7 +15,7 @@
 #
 
 name "expat"
-default_version "2.7.5" # 2.6.4 is the latest version as of 2024-11-6, v2.5.0 has a CVE in it.
+default_version "2.7.5"
 
 relative_path "expat-#{version}"
 dependency "config_guess"
@@ -29,33 +29,12 @@ source url: "https://github.com/libexpat/libexpat/releases/download/R_#{version.
 internal_source url: "#{ENV["ARTIFACTORY_REPO_URL"]}/#{name}/#{name}-#{version}.tar.gz",
                 authorization: "X-JFrog-Art-Api:#{ENV["ARTIFACTORY_TOKEN"]}"
 
-version("2.6.4") { source sha256: "fd03b7172b3bd7427a3e7a812063f74754f24542429b634e0db6511b53fb2278" }
-version("2.5.0") { source sha256: "6b902ab103843592be5e99504f846ec109c1abb692e85347587f237a4ffa1033" }
-version("2.4.9") { source sha256: "4415710268555b32c4e5ab06a583bea9fec8ff89333b218b70b43d4ca10e38fa" }
-version("2.4.8") { source sha256: "398f6d95bf808d3108e27547b372cb4ac8dc2298a3c4251eb7aa3d4c6d4bb3e2" }
-version("2.4.7") { source sha256: "72644d5f0f313e2a5cf81275b09b9770c866dd87a2b62ab19981657ac0d4af5f" }
-version("2.4.6") { source sha256: "a0eb5af56b1c2ba812051c49bf3b4e5763293fe5394a0219df7208845c3efb8c" }
-version("2.4.1") { source sha256: "a00ae8a6b96b63a3910ddc1100b1a7ef50dc26dceb65ced18ded31ab392f132b" }
-version("2.3.0") { source sha256: "89df123c62f2c2e2b235692d9fe76def6a9ab03dbe95835345bf412726eb1987" }
-version("2.1.0") { source sha256: "823705472f816df21c8f6aa026dd162b280806838bb55b3432b0fb1fcca7eb86" }
+version("2.7.5") { source sha256: "9931f9860d18e6cf72d183eb8f309bfb96196c00e1d40caa978e95bc9aa978b6" }
 
 build do
   env = with_standard_compiler_flags(with_embedded_path)
 
   update_config_guess(target: "conftools")
-
-  # AIX needs two fixes to compile the latest version.
-  #  1. We need to add -lm to link in the proper math declarations
-  #  2. Since we are using xlc to compile, we need to use qvisibility instead of fvisibility
-  #     Refer to https://www.ibm.com/docs/en/xl-c-and-cpp-aix/16.1?topic=descriptions-qvisibility-fvisibility
-  if aix?
-    env["LDFLAGS"] << " -lm"
-    if version <= "2.4.1"
-      patch source: "configure_xlc_visibility.patch", plevel: 1, env: env
-    else
-      patch source: "configure_xlc_visibility_2.4.7.patch", plevel: 1, env: env
-    end
-  end
 
   command "./configure" \
           " --without-examples" \
