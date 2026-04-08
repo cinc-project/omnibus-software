@@ -18,7 +18,7 @@ OPENSSL_VALIDATION_TYPES = %w{ executable ruby providers }.freeze
 def parse_versions(file, build_all)
   versions = []
 
-  File.readlines(file).each do |line|
+  File.readlines(file, encoding: "utf-8").each do |line|
     if build_all
       next unless line.match?(/^\s*default_version\b/)
     else
@@ -45,7 +45,7 @@ end
 # ---------------------------------------------------------------------------
 def collect_files_all
   Dir.glob("config/software/*.rb").select do |file|
-    !File.readlines(file).any? { |l| l.match(/^\s*deprecated/) }
+    !File.readlines(file, encoding: "utf-8").any? { |l| l.match(/^\s*deprecated/) }
   end
 end
 
