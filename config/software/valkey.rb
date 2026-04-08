@@ -25,7 +25,7 @@ dependency "openssl"
 dependency "libuuid"
 dependency "curl"
 
-default_version "7.2.11"
+default_version "9.0.3"
 
 source url: "https://github.com/valkey-io/valkey/archive/refs/tags/#{version}.tar.gz"
 internal_source url: "#{ENV["ARTIFACTORY_REPO_URL"]}/#{name}/#{name}-#{version}.tar.gz",
@@ -33,8 +33,7 @@ internal_source url: "#{ENV["ARTIFACTORY_REPO_URL"]}/#{name}/#{name}-#{version}.
 relative_path "valkey-#{version}"
 
 # version_list: url=https://github.com/valkey-io/valkey/archive/refs/tags/ filter=*.tar.gz
-version("9.0.0") { source sha256: "088f47e167eb640ea31af48c81c5d62ee56321f25a4b05d4e54a0ef34232724b" }
-version("7.2.11") { source sha256: "12acb6e5c07c71460761eee4361310dbd3618cecd42c70f02223d0ccf31fc6d8" }
+version("9.0.3") { source sha256: "e220f4b0143292ee6ea6d705aa40d45a0c8a77759b3e94c201cb5c25dbdca42f" }
 
 build do
   env = with_standard_compiler_flags(with_embedded_path).merge(
