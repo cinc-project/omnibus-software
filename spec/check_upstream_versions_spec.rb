@@ -715,21 +715,30 @@ RSpec.describe "check_upstream_versions" do
   describe "SOURCE_OVERRIDES" do
     it "has valid type for every entry" do
       SOURCE_OVERRIDES.each do |name, override|
-        expect(%i{github http}).to include(override[:type]), "#{name} has invalid type #{override[:type]}"
+        overrides = override.is_a?(Array) ? override : [override]
+        overrides.each do |o|
+          expect(%i{github http}).to include(o[:type]), "#{name} has invalid type #{o[:type]}"
+        end
       end
     end
 
     it "github overrides have owner and repo" do
-      SOURCE_OVERRIDES.select { |_, v| v[:type] == :github }.each do |name, override|
-        expect(override[:owner]).to be_a(String), "#{name} missing owner"
-        expect(override[:repo]).to be_a(String), "#{name} missing repo"
+      SOURCE_OVERRIDES.each do |name, override|
+        overrides = override.is_a?(Array) ? override : [override]
+        overrides.select { |o| o[:type] == :github }.each do |o|
+          expect(o[:owner]).to be_a(String), "#{name} missing owner"
+          expect(o[:repo]).to be_a(String), "#{name} missing repo"
+        end
       end
     end
 
     it "http overrides have url and pattern" do
-      SOURCE_OVERRIDES.select { |_, v| v[:type] == :http }.each do |name, override|
-        expect(override[:url]).to be_a(String), "#{name} missing url"
-        expect(override[:pattern]).to be_a(Regexp), "#{name} missing pattern"
+      SOURCE_OVERRIDES.each do |name, override|
+        overrides = override.is_a?(Array) ? override : [override]
+        overrides.select { |o| o[:type] == :http }.each do |o|
+          expect(o[:url]).to be_a(String), "#{name} missing url"
+          expect(o[:pattern]).to be_a(Regexp), "#{name} missing pattern"
+        end
       end
     end
   end

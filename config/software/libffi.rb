@@ -24,12 +24,6 @@ skip_transitive_dependency_licensing true
 # version_list: url=https://github.com/libffi/libffi/releases  filter=*.tar.gz
 
 version("3.5.2") { source sha256: "f3a3082a23b37c293a4fcd1053147b371f2ff91fa7ea1b2a52e335676bac82dc" }
-version("3.4.8") { source sha256: "bc9842a18898bfacb0ed1252c4febcc7e78fa139fd27fdc7a3e30d9d9356119b" }
-version("3.4.7") { source sha256: "138607dee268bdecf374adf9144c00e839e38541f75f24a1fcf18b78fda48b2d" }
-version("3.4.6") { source sha256: "b0dea9df23c863a7a50e825440f3ebffabd65df1497108e5d437747843895a4e" }
-version("3.4.4") { source sha256: "d66c56ad259a82cf2a9dfc408b32bf5da52371500b84745f7fb8b645712df676" }
-version("3.4.2") { source sha256: "540fb721619a6aba3bdeef7d940d8e9e0e6d2c193595bc243241b77ff9e93620" }
-version("3.3")   { source sha256: "72fba7922703ddfa7a028d513ac15a85c8d54c8d67f55fa5a4802885dc652056" }
 
 source url: "https://github.com/libffi/libffi/releases/download/v#{version}/libffi-#{version}.tar.gz"
 internal_source url: "#{ENV["ARTIFACTORY_REPO_URL"]}/#{name}/#{name}-#{version}.tar.gz",
@@ -40,32 +34,9 @@ relative_path "libffi-#{version}"
 build do
   env = with_standard_compiler_flags(with_embedded_path)
 
-  env["INSTALL"] = "/opt/freeware/bin/install" if aix?
-
-  # disable option checking as disable-docs is 3.3+ only
-  configure_command = ["--disable-option-checking",
-                       "--disable-docs",
+  configure_command = ["--disable-docs",
+                       "--disable-multi-os-directory",
   ]
-
-  if version == "3.3" && mac_os_x? && arm?
-    patch source: "libffi-3.3-arm64.patch", plevel: 1, env: env
-  end
-
-  if version == "3.4.4" && rhel? && platform_version.satisfies?("~> 10.0")
-    patch source: "libffi-rhel10-3.4.4-Forward-declare-open_temp_exec_file.patch", plevel: 1, env: env
-  end
-
-  # AIX's old version of patch doesn't like the patch here
-  unless aix?
-    # disable multi-os-directory via configure flag (don't use /lib64)
-    # Works on all platforms, and is compatible on 32bit platforms as well
-    configure_command << "--disable-multi-os-directory"
-
-    # add the --disable-multi-os-directory flag to 3.2.1
-    if version == "3.2.1"
-      patch source: "libffi-3.2.1-disable-multi-os-directory.patch", plevel: 1, env: env
-    end
-  end
 
   configure(*configure_command, env: env)
 
