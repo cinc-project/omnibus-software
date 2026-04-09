@@ -13,10 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# expeditor/ignore: deprecated 2021-04
+# version_list: url=https://ftp.osuosl.org/pub/gnu/autoconf/ filter=autoconf-*.tar.gz
 
 name "autoconf"
-default_version "2.69"
+default_version "2.73"
 
 license "GPL-3.0"
 license_file "COPYING"
@@ -25,7 +25,7 @@ skip_transitive_dependency_licensing true
 
 dependency "m4"
 
-version("2.69") { source sha256: "954bd69b391edc12d6a4a51a2dd1476543da5c6bbf05a95b59dc0dd6fd4c2969" }
+version("2.73") { source sha256: "259ddfa3bddc799cfb81489cc0f17dfdf1bd6d1505dda53c0f45ff60d6a4f9a7" }
 
 source url: "https://ftp.osuosl.org/pub/gnu/autoconf/autoconf-#{version}.tar.gz"
 internal_source url: "#{ENV["ARTIFACTORY_REPO_URL"]}/#{name}/#{name}-#{version}.tar.gz",
@@ -34,10 +34,6 @@ relative_path "autoconf-#{version}"
 
 build do
   env = with_standard_compiler_flags(with_embedded_path)
-
-  if solaris2?
-    env["M4"] = "#{install_dir}/embedded/bin/m4"
-  end
 
   command "./configure" \
           " --prefix=#{install_dir}/embedded", env: env
