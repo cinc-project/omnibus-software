@@ -20,7 +20,7 @@ license "OpenSSL"
 license_file "LICENSE"
 skip_transitive_dependency_licensing true
 
-default_version "3.5.5"
+default_version "3.6.2"
 
 dependency "cacerts"
 
@@ -33,6 +33,7 @@ source url: "https://www.openssl.org/source/openssl-#{version}.tar.gz", extract:
 internal_source url: "#{ENV["ARTIFACTORY_REPO_URL"]}/#{name}/#{name}-#{version}.tar.gz", extract: :lax_tar,
                 authorization: "X-JFrog-Art-Api:#{ENV["ARTIFACTORY_TOKEN"]}"
 
+version("3.6.2") { source sha256: "aaf51a1fe064384f811daeaeb4ec4dce7340ec8bd893027eee676af31e83a04f" }
 version("3.5.5") { source sha256: "b28c91532a8b65a1f983b4c28b7488174e4a01008e29ce8e69bd789f28bc2a89" }
 version("3.5.4") { source sha256: "967311f84955316969bdb1d8d4b983718ef42338639c621ec4c34fddef355e99" }
 version("3.2.6") { source sha256: "89681a9ddaa9ed7cf25ea8ef61338db805200bae47d00510490623547380c148" }
