@@ -13,17 +13,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# expeditor/ignore: deprecated 2021-04
+# version_list: url=https://deb.debian.org/debian/pool/main/f/fakeroot/ filter=fakeroot_*.orig.tar.gz
 
 name "fakeroot"
-default_version "1.20.2"
+default_version "1.37.2"
 
-version("1.20.2") { source sha256: "7c0a164d19db3efa9e802e0fc7cdfeff70ec6d26cdbdc4338c9c2823c5ea230c" }
+version("1.37.2") { source sha256: "0eea60fbe89771b88fcf415c8f2f0a6ccfe9edebbcf3ba5dc0212718d98884db" }
 
 license "GPL-3.0"
 license_file "COPYING"
 
-source url: "ftp://ftp.debian.org/debian/pool/main/f/fakeroot/fakeroot_#{version}.orig.tar.bz2"
+source url: "https://deb.debian.org/debian/pool/main/f/fakeroot/fakeroot_#{version}.orig.tar.gz"
 
 relative_path "fakeroot-#{version}"
 
