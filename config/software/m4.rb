@@ -13,21 +13,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# expeditor/ignore: deprecated 2021-04
+# version_list: url=https://ftp.osuosl.org/pub/gnu/m4/ filter=m4-*.tar.gz
 
 name "m4"
-if macos? && platform_version.satisfies?(">=14")
-  default_version "1.4.20"
-else
-  default_version "1.4.18"
-end
+default_version "1.4.21"
 
 license "GPL-3.0"
 license_file "COPYING"
 skip_transitive_dependency_licensing true
 
-version("1.4.20") { source sha256: "6ac4fc31ce440debe63987c2ebbf9d7b6634e67a7c3279257dc7361de8bdb3ef" }
-version("1.4.18") { source sha256: "ab2633921a5cd38e48797bf5521ad259bdc4b979078034a3b790d7fec5493fab" }
+version("1.4.21") { source sha256: "38ae59f7a30bf9c108193cc5c25fbb06014f21e230c7ede2eff614f7b7c37ed8" }
 
 source url: "https://ftp.osuosl.org/pub/gnu/m4/m4-#{version}.tar.gz"
 internal_source url: "#{ENV["ARTIFACTORY_REPO_URL"]}/#{name}/m4-#{version}.tar.gz",
@@ -36,8 +31,6 @@ relative_path "m4-#{version}"
 
 build do
   env = with_standard_compiler_flags(with_embedded_path)
-
-  patch source: "m4-1.4.18-glibc-change-work-around.patch", plevel: 1, env: env if version == "1.4.18"
 
   command "./configure --prefix=#{install_dir}/embedded", env: env
 
