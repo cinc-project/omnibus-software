@@ -13,13 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# expeditor/ignore: deprecated 2021-04
+# version_list: url=https://ftp.osuosl.org/pub/gnu/binutils/ filter=binutils-*.tar.gz
 
 name "binutils"
-default_version "2.26"
+default_version "2.46.0"
 
-version("2.35") { source sha256: "a3ac62bae4f339855b5449cfa9b49df90c635adbd67ecb8a0e7f3ae86a058da6" }
-version("2.26") { source sha256: "9615feddaeedc214d1a1ecd77b6697449c952eab69d79ab2125ea050e944bcc1" }
+version("2.46.0") { source sha256: "8608fe44ab7de645f6ad0a898313b75338842490d609adb85c9fb2827c376af2" }
 
 license "GPL-3.0"
 license_file "COPYING"
@@ -27,18 +26,15 @@ license_file "COPYING.LIB"
 
 source url: "https://ftp.osuosl.org/pub/gnu/binutils/binutils-#{version}.tar.gz"
 
-dependency "config_guess"
-
 relative_path "binutils-#{version}"
 
 build do
   env = with_standard_compiler_flags(with_embedded_path)
 
-  update_config_guess
-
   configure_command = ["./configure",
                      "--prefix=#{install_dir}/embedded",
-                     "--disable-libquadmath"]
+                     "--disable-libquadmath",
+                     "--disable-werror"]
 
   command configure_command.join(" "), env: env
 
