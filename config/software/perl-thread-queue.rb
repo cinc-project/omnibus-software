@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# expeditor/ignore: deprecated 2021-04
+# version_list: url=https://cpan.metacpan.org/authors/id/J/JD/JDHEDDEN/ filter=Thread-Queue-*.tar.gz
 
 name "perl-thread-queue"
 default_version "3.13"
@@ -24,7 +24,7 @@ version "3.13" do
   source sha256: "6ba3dacddd2fbb66822b4aa1d11a0a5273cd04c825cb3ff31c20d7037cbfdce8"
 end
 
-source url: "http://search.cpan.org/CPAN/authors/id/J/JD/JDHEDDEN/Thread-Queue-#{version}.tar.gz"
+source url: "https://cpan.metacpan.org/authors/id/J/JD/JDHEDDEN/Thread-Queue-#{version}.tar.gz"
 internal_source url: "#{ENV["ARTIFACTORY_REPO_URL"]}/#{name}/#{name}-#{version}.tar.gz",
                 authorization: "X-JFrog-Art-Api:#{ENV["ARTIFACTORY_TOKEN"]}"
 relative_path "Thread-Queue-#{version}"
