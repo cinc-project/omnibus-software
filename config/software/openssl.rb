@@ -92,7 +92,11 @@ build do
       "#{prefix} disable-gost"
     end
 
-  patch source: "openssl-3.2.4-do-not-install-docs.patch", env: env
+  if Gem::Version.new(version) >= Gem::Version.new("3.6.0")
+    patch source: "openssl-3.6.0-do-not-install-docs.patch", env: env
+  else
+    patch source: "openssl-3.2.4-do-not-install-docs.patch", env: env
+  end
   configure_args << "enable-legacy"
   patch source: "openssl-3.2.4-enable-legacy-provider.patch", env: env
 
