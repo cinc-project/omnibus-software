@@ -16,21 +16,19 @@
 
 name "redis"
 
-license "BSD-3-Clause"
-license_file "COPYING"
+if version && version.satisfies?(">= 8")
+  license "AGPLv3"
+  license_file "LICENSE.txt"
+else
+  license "BSD-3-Clause"
+  license_file "COPYING"
+end
 skip_transitive_dependency_licensing true
 
 dependency "config_guess"
-default_version "7.0.8"
+default_version "8.6.2"
 
-version("7.2.3") { source sha256: "3e2b196d6eb4ddb9e743088bfc2915ccbb42d40f5a8a3edd8cb69c716ec34be7" }
-version("7.0.8") { source sha256: "06a339e491306783dcf55b97f15a5dbcbdc01ccbde6dc23027c475cab735e914" }
-version("7.0.4") { source sha256: "f0e65fda74c44a3dd4fa9d512d4d4d833dd0939c934e946a5c622a630d057f2f" }
-version("7.0.2") { source sha256: "5e57eafe7d4ac5ecb6a7d64d6b61db775616dbf903293b3fcc660716dbda5eeb" }
-version("7.0.0") { source sha256: "284d8bd1fd85d6a55a05ee4e7c31c31977ad56cbf344ed83790beeb148baa720" }
-version("6.2.7") { source sha256: "b7a79cc3b46d3c6eb52fa37dde34a4a60824079ebdfb3abfbbfa035947c55319" }
-version("6.2.6") { source sha256: "5b2b8b7a50111ef395bf1c1d5be11e6e167ac018125055daa8b5c2317ae131ab" }
-version("6.2.5") { source sha256: "4b9a75709a1b74b3785e20a6c158cab94cf52298aa381eea947a678a60d551ae" }
+version("8.6.2") { source sha256: "cea46526594fe05f05b9ff733179eb1263deccf4269059cf081fdef222634c88" }
 version("5.0.14") { source sha256: "3ea5024766d983249e80d4aa9457c897a9f079957d0fb1f35682df233f997f32" }
 
 source url: "https://download.redis.io/releases/redis-#{version}.tar.gz"
