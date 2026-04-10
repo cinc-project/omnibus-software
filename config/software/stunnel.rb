@@ -15,7 +15,7 @@
 #
 
 name "stunnel"
-default_version "5.77"
+default_version "5.78"
 
 license "GPL-2.0"
 license_file "COPYING"
@@ -31,6 +31,7 @@ internal_source url: "#{ENV["ARTIFACTORY_REPO_URL"]}/#{name}/#{name}-#{version}.
 
 relative_path "stunnel-#{version}"
 
+version("5.78") { source sha256: "8727e53bb8b7528f850327a2a149158422c02183bc120d1d733cc65b1e2c349d" }
 version("5.77") { source sha256: "ec026f4fae4e0d25b940cc7a9451d925e359e7fd59e9edad20baea66ce45f263" }
 
 build do
