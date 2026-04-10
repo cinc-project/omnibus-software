@@ -27,16 +27,6 @@ skip_transitive_dependency_licensing true
 # versions_list: https://github.com/libarchive/libarchive/releases/ filter=*.tar.gz
 
 version("3.8.6") { source sha256: "213269b05aac957c98f6e944774bb438d0bd168a2ec60b9e4f8d92035925821c" }
-version("3.8.1") { source sha256: "bde832a5e3344dc723cfe9cc37f8e54bde04565bfe6f136bc1bd31ab352e9fab" }
-version("3.7.9") { source sha256: "aa90732c5a6bdda52fda2ad468ac98d75be981c15dde263d7b5cf6af66fd009f" }
-version("3.7.5") { source sha256: "37556113fe44d77a7988f1ef88bf86ab68f53d11e85066ffd3c70157cc5110f1" }
-version("3.7.4") { source sha256: "7875d49596286055b52439ed42f044bd8ad426aa4cc5aabd96bfe7abb971d5e8" }
-version("3.6.2") { source sha256: "ba6d02f15ba04aba9c23fd5f236bb234eab9d5209e95d1c4df85c44d5f19b9b3" }
-version("3.6.1") { source sha256: "c676146577d989189940f1959d9e3980d28513d74eedfbc6b7f15ea45fe54ee2" }
-version("3.6.0") { source sha256: "a36613695ffa2905fdedc997b6df04a3006ccfd71d747a339b78aa8412c3d852" }
-version("3.5.2") { source sha256: "5f245bd5176bc5f67428eb0aa497e09979264a153a074d35416521a5b8e86189" }
-version("3.5.1") { source sha256: "9015d109ec00bb9ae1a384b172bf2fc1dff41e2c66e5a9eeddf933af9db37f5a" }
-version("3.5.0") { source sha256: "fc4bc301188376adc18780d35602454cc8df6396e1b040fbcbb0d4c0469faf54" }
 
 source url: "https://github.com/libarchive/libarchive/releases/download/v#{version}/libarchive-#{version}.tar.gz"
 internal_source url: "#{ENV["ARTIFACTORY_REPO_URL"]}/#{name}/#{name}-#{version}.tar.gz",
