@@ -30,7 +30,7 @@ dependency "openssl"
 # version_list: url=https://sourceware.org/pub/bzip2/ filter=*.tar.gz
 version("1.0.8") { source sha256: "ab5a03176ee106d3f0fa90e381da478ddae405918153cca248e682cd0c4a2269" }
 
-source url: "https://fossies.org/linux/misc/#{name}-#{version}.tar.gz"
+source url: "https://sourceware.org/pub/bzip2/#{name}-#{version}.tar.gz"
 internal_source url: "#{ENV["ARTIFACTORY_REPO_URL"]}/#{name}/#{name}-#{version}.tar.gz",
                 authorization: "X-JFrog-Art-Api:#{ENV["ARTIFACTORY_TOKEN"]}"
 
@@ -40,16 +40,14 @@ build do
   env = with_standard_compiler_flags(with_embedded_path)
 
   # Avoid warning where .rodata cannot be used when making a shared object
-  env["CFLAGS"] << " -fPIC" unless aix?
+  env["CFLAGS"] << " -fPIC"
 
   # The list of arguments to pass to make
   args = "PREFIX='#{install_dir}/embedded' VERSION='#{version}'"
-  args << " CFLAGS='-qpic=small -qpic=large -O2 -g -D_ALL_SOURCE -D_LARGE_FILES'" if aix?
 
   patch source: "makefile_take_env_vars.patch", plevel: 1, env: env
   patch source: "makefile_no_bins.patch", plevel: 1, env: env # removes various binaries we don't want to ship
   patch source: "soname_install_dir.patch", env: env if mac_os_x?
-  patch source: "aix_makefile.patch", env: env if aix?
 
   make "#{args}", env: env
   make "#{args} -f Makefile-libbz2_so", env: env
