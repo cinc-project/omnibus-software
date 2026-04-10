@@ -22,8 +22,6 @@ dependency "config_guess"
 # version_list: url=https://www.x.org/releases/individual/proto/ filter=xproto-*.tar.gz
 
 version("7.0.31") { source sha256: "6d755eaae27b45c5cc75529a12855fed5de5969b367ed05003944cf901ed43c7" }
-version("7.0.28") { source sha256: "6cabc8ce3fa2b1a2427871167b62c24d5b08a58bd3e81ed7aaf08f2bf6dbcfed" }
-version("7.0.25") { source sha256: "e3dc634103f923a2276289745eb7b702b18cfc885ea4b2382bd35a8cc3d935cb" }
 
 source url: "https://www.x.org/releases/individual/proto/xproto-#{version}.tar.gz"
 internal_source url: "#{ENV["ARTIFACTORY_REPO_URL"]}/#{name}/#{name}-#{version}.tar.gz",
