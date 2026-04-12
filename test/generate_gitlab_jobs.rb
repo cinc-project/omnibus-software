@@ -6,7 +6,7 @@ require "yaml"
 BRANCH = "stable/cinc".freeze
 
 # Skip health check when it is not relevant
-HEALTH_CHECK_SKIP_LIST = %w{ cacerts config_guess xproto util-macros }.freeze
+HEALTH_CHECK_SKIP_LIST = %w{ cacerts config_guess xproto util-macros musl }.freeze
 DEPRECATED_SKIP_LIST = %w{ git-windows cmake ruby-msys2-devkit }.freeze
 OPENSSL_VALIDATION_TYPES = %w{ executable ruby providers }.freeze
 
