@@ -155,12 +155,21 @@ RSpec.describe "generate_gitlab_jobs" do
     end
 
     it "skips deprecated software" do
+      path = write_software("cmake", <<~RUBY)
+        name "cmake"
+        default_version "3.19.7"
+      RUBY
+      jobs = generate_jobs([path], true)
+      expect(jobs).to be_empty
+    end
+
+    it "uses .build:windows template for windows-only software" do
       path = write_software("git-windows", <<~RUBY)
         name "git-windows"
         default_version "2.40.0"
       RUBY
       jobs = generate_jobs([path], true)
-      expect(jobs).to be_empty
+      expect(jobs["build:git-windows_2.40.0"]["extends"]).to eq(".build:windows")
     end
 
     it "skips chef local_source version" do
@@ -383,7 +392,7 @@ RSpec.describe "generate_gitlab_jobs" do
       jobs.each do |name, job|
         next if name.start_with?("validate:")
 
-        expect(job["extends"]).to eq(".build")
+        expect(job["extends"]).to be_a(String).and(satisfy { |v| [".build", ".build:windows"].include?(v) })
         expect(job["variables"]["SOFTWARE"]).to be_a(String)
         # Ruby build jobs for openssl validation use OPENSSL_VERSION instead of VERSION
         if job["variables"]["OPENSSL_VERSION"]

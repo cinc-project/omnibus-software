@@ -7,7 +7,8 @@ BRANCH = "stable/cinc".freeze
 
 # Skip health check when it is not relevant
 HEALTH_CHECK_SKIP_LIST = %w{ cacerts config_guess xproto util-macros musl gem-permissions go-uninstall preparation rust-uninstall shebang-cleanup version-manifest }.freeze
-DEPRECATED_SKIP_LIST = %w{ git-windows cmake ruby-msys2-devkit }.freeze
+DEPRECATED_SKIP_LIST = %w{ cmake }.freeze
+WINDOWS_ONLY_LIST = %w{ git-windows ruby-msys2-devkit }.freeze
 OPENSSL_VALIDATION_TYPES = %w{ executable ruby providers }.freeze
 
 # ---------------------------------------------------------------------------
@@ -85,10 +86,11 @@ def generate_jobs(files, build_all)
 
       skip_health_check = HEALTH_CHECK_SKIP_LIST.include?(software) ? "true" : ""
       safe_ver = ver.gsub("/", "_")
+      build_template = WINDOWS_ONLY_LIST.include?(software) ? ".build:windows" : ".build"
 
       job_name = "build:#{software}_#{safe_ver}"
       jobs[job_name] = {
-        "extends" => ".build",
+        "extends" => build_template,
         "cache" => {
           "key" => "#{software}-#{safe_ver}",
         },
