@@ -65,8 +65,8 @@ build do
       copy "#{tmpdir}/#{msys_dir}/usr/bin/msys-zstd-1.dll", "#{install_dir}/bin/msys-zstd-1.dll"
     end
 
-    # Initialize msys2 using bash directly since msys2_shell.cmd may not
-    # work when the msys2 installation is copied to a different location
-    command "#{embedded_dir}/#{msys_dir}/usr/bin/bash.exe -lc exit", env: { "CONFIG" => "" }
+    # Skip msys2 initialization - when copied to a different location the
+    # login shell profile references the original install path and fails.
+    # Real projects handle initialization in their own build steps.
   end
 end

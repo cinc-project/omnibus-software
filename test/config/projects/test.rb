@@ -8,7 +8,7 @@ install_dir "#{default_root}/#{name}"
 if windows?
   package :msi do
     upgrade_code "2CD7259C-776D-4DDB-A4C8-6E544E580AA1"
-    fast_msi true
+    wix_light_delay_validation true
   end
 end
 
