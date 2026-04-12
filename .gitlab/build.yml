@@ -18,6 +18,32 @@
     paths:
       - test/pkg/
 
+.build:windows:
+  stage: build
+  tags:
+    - windows-2016
+  before_script:
+    - rm.exe -rf C:\test C:\omnibus-ruby\src C:\omnibus-ruby\pkg
+    - rm.exe -rf C:\omnibus-ruby\build C:\omnibus-ruby\cache
+  script:
+    - $ErrorActionPreference = "Stop"
+    - C:\omnibus\load-omnibus-toolchain.ps1
+    - cd test
+    - bash omnibus-build.sh
+  after_script:
+    - rm.exe -rf C:\test C:\omnibus-ruby\src C:\omnibus-ruby\pkg
+    - rm.exe -rf C:\omnibus-ruby\build C:\omnibus-ruby\cache
+  cache:
+    paths:
+      - bundle/vendor/*
+      - cache/
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "parent_pipeline"
+  artifacts:
+    expire_in: 1mo
+    paths:
+      - test/pkg/
+
 .validate:
   stage: validate
   image: cincproject/omnibus-debian

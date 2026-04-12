@@ -30,83 +30,6 @@ version "3.4.9-1" do
                   authorization: "X-JFrog-Art-Api:#{ENV["ARTIFACTORY_TOKEN"]}"
 end
 
-version "3.4.7-1" do
-  source url: "https://github.com/oneclick/rubyinstaller2/releases/download/RubyInstaller-#{version}/rubyinstaller-devkit-#{version}-x64.exe",
-          sha256: "994bdb9acce25b1a9f5d9f30cde8bba60e28a239f252ac6f3a6c9510a43e13f6"
-  internal_source url: "#{ENV["ARTIFACTORY_REPO_URL"]}/#{name}/rubyinstaller-devkit-#{version}-x64.exe",
-                  authorization: "X-JFrog-Art-Api:#{ENV["ARTIFACTORY_TOKEN"]}"
-end
-
-version "3.4.4-2" do
-  source url: "https://github.com/oneclick/rubyinstaller2/releases/download/RubyInstaller-#{version}/rubyinstaller-devkit-#{version}-x64.exe",
-          sha256: "013aed0f658cd7139eec56bed861e246f17707b8501891a2be3a93f833bb858e"
-  internal_source url: "#{ENV["ARTIFACTORY_REPO_URL"]}/#{name}/rubyinstaller-devkit-#{version}-x64.exe",
-                  authorization: "X-JFrog-Art-Api:#{ENV["ARTIFACTORY_TOKEN"]}"
-end
-
-version "3.3.0-1" do
-  source url: "https://github.com/oneclick/rubyinstaller2/releases/download/RubyInstaller-#{version}/rubyinstaller-devkit-#{version}-x64.exe",
-          sha256: "01fc7d7889f161e94ae515c15fc1c22b7db506ab91af891cf7e1a764e96d8298"
-  internal_source url: "#{ENV["ARTIFACTORY_REPO_URL"]}/#{name}/rubyinstaller-devkit-#{version}-x64.exe",
-                  authorization: "X-JFrog-Art-Api:#{ENV["ARTIFACTORY_TOKEN"]}"
-end
-
-version "3.3.1-1" do
-  source url: "https://github.com/oneclick/rubyinstaller2/releases/download/RubyInstaller-#{version}/rubyinstaller-devkit-#{version}-x64.exe",
-          sha256: "dc590fb3d1c4254e7d33179bb84df378ead943fece2159eada5f3582bf643cc3"
-  internal_source url: "#{ENV["ARTIFACTORY_REPO_URL"]}/#{name}/rubyinstaller-devkit-#{version}-x64.exe",
-                  authorization: "X-JFrog-Art-Api:#{ENV["ARTIFACTORY_TOKEN"]}"
-end
-
-version "3.0.6-1" do
-  source url: "https://github.com/oneclick/rubyinstaller2/releases/download/RubyInstaller-#{version}/rubyinstaller-devkit-#{version}-x64.exe",
-          sha256: "c44256eae6a934db39e4f3a56d39178ac87b8b754e9b66221910417adb59a3a1"
-  internal_source url: "#{ENV["ARTIFACTORY_REPO_URL"]}/#{name}/rubyinstaller-devkit-#{version}-x64.exe",
-                  authorization: "X-JFrog-Art-Api:#{ENV["ARTIFACTORY_TOKEN"]}"
-end
-
-version "3.1.2-1" do
-  source url: "https://github.com/oneclick/rubyinstaller2/releases/download/RubyInstaller-#{version}/rubyinstaller-devkit-#{version}-x64.exe",
-          sha256: "5f0fd4a206b164a627c46e619d2babbcafb0ed4bc3e409267b9a73b6c58bdec1"
-  internal_source url: "#{ENV["ARTIFACTORY_REPO_URL"]}/#{name}/rubyinstaller-devkit-#{version}-x64.exe",
-                  authorization: "X-JFrog-Art-Api:#{ENV["ARTIFACTORY_TOKEN"]}"
-end
-
-version "3.1.4-1" do
-  source url: "https://github.com/oneclick/rubyinstaller2/releases/download/RubyInstaller-#{version}/rubyinstaller-devkit-#{version}-x64.exe",
-          sha256: "d3dd7451bdae502894925a90c9e87685ec18fd3f73a6ca50e4282b8879d385e2"
-  internal_source url: "#{ENV["ARTIFACTORY_REPO_URL"]}/#{name}/rubyinstaller-devkit-#{version}-x64.exe",
-                  authorization: "X-JFrog-Art-Api:#{ENV["ARTIFACTORY_TOKEN"]}"
-end
-
-version "3.1.5-1" do
-  source url: "https://github.com/oneclick/rubyinstaller2/releases/download/RubyInstaller-#{version}/rubyinstaller-devkit-#{version}-x64.exe",
-         sha256: ""
-  internal_source url: "#{ENV["ARTIFACTORY_REPO_URL"]}/#{name}/rubyinstaller-devkit-#{version}-x64.exe",
-                  authorization: "X-JFrog-Art-Api:#{ENV["ARTIFACTORY_TOKEN"]}"
-end
-
-version "3.1.6-1" do
-  source url: "https://github.com/oneclick/rubyinstaller2/releases/download/RubyInstaller-#{version}/rubyinstaller-devkit-#{version}-x64.exe",
-          sha256: "42f71849f0ae053df8d40182e00ee82a98ac5faa69d815fa850566f2d3711174"
-  internal_source url: "#{ENV["ARTIFACTORY_REPO_URL"]}/#{name}/rubyinstaller-devkit-#{version}-x64.exe",
-                  authorization: "X-JFrog-Art-Api:#{ENV["ARTIFACTORY_TOKEN"]}"
-end
-
-version "3.1.7-1" do
-  source url: "https://github.com/oneclick/rubyinstaller2/releases/download/RubyInstaller-#{version}/rubyinstaller-devkit-#{version}-x64.exe",
-          sha256: "c643bf00680aa21f20b34587aa0613e9970d9b63adaef2c0228925a7f9cdfc7a"
-  internal_source url: "#{ENV["ARTIFACTORY_REPO_URL"]}/#{name}/rubyinstaller-devkit-#{version}-x64.exe",
-                  authorization: "X-JFrog-Art-Api:#{ENV["ARTIFACTORY_TOKEN"]}"
-end
-
-version "3.2.2-1" do
-  source url: "https://github.com/oneclick/rubyinstaller2/releases/download/RubyInstaller-#{version}/rubyinstaller-devkit-#{version}-x64.exe",
-          sha256: "678619631c7e0e9b06bd53fd50689b47770fb577a8e49a35f615d2c8691aa6b7"
-  internal_source url: "#{ENV["ARTIFACTORY_REPO_URL"]}/#{name}/rubyinstaller-devkit-#{version}-x64.exe",
-                  authorization: "X-JFrog-Art-Api:#{ENV["ARTIFACTORY_TOKEN"]}"
-end
-
 build do
   if windows?
     embedded_dir = "#{install_dir}/embedded"
@@ -114,27 +37,12 @@ build do
     Dir.mktmpdir do |tmpdir|
       command "#{project_dir}/rubyinstaller-devkit-#{version}-#{arch}.exe /SP- /NORESTART /VERYSILENT /SUPPRESSMSGBOXES /NOPATH /DIR=#{tmpdir}"
       copy "#{tmpdir}/#{msys_dir}", embedded_dir
-      if version.start_with?("3.0")
-        copy "#{tmpdir}/lib/ruby/site_ruby/3.0.0/devkit.rb", "#{embedded_dir}/lib/ruby/site_ruby/3.0.0"
-        copy "#{tmpdir}/lib/ruby/site_ruby/3.0.0/ruby_installer.rb", "#{embedded_dir}/lib/ruby/site_ruby/3.0.0"
-        copy "#{tmpdir}/lib/ruby/site_ruby/3.0.0/ruby_installer", "#{embedded_dir}/lib/ruby/site_ruby/3.0.0"
-        copy "#{tmpdir}/lib/ruby/3.0.0/rubygems/defaults", "#{embedded_dir}/lib/ruby/3.0.0/rubygems/defaults"
-      elsif version.start_with?("3.1")
-        copy "#{tmpdir}/lib/ruby/site_ruby/3.1.0/devkit.rb", "#{embedded_dir}/lib/ruby/site_ruby/3.1.0"
-        copy "#{tmpdir}/lib/ruby/site_ruby/3.1.0/ruby_installer.rb", "#{embedded_dir}/lib/ruby/site_ruby/3.1.0"
-        copy "#{tmpdir}/lib/ruby/site_ruby/3.1.0/ruby_installer", "#{embedded_dir}/lib/ruby/site_ruby/3.1.0"
-        copy "#{tmpdir}/lib/ruby/3.1.0/rubygems/defaults", "#{embedded_dir}/lib/ruby/3.1.0/rubygems/defaults"
-      elsif version.start_with?("3.2")
-        copy "#{tmpdir}/lib/ruby/site_ruby/3.2.0/devkit.rb", "#{embedded_dir}/lib/ruby/site_ruby/3.2.0"
-        copy "#{tmpdir}/lib/ruby/site_ruby/3.2.0/ruby_installer.rb", "#{embedded_dir}/lib/ruby/site_ruby/3.2.0"
-        copy "#{tmpdir}/lib/ruby/site_ruby/3.2.0/ruby_installer", "#{embedded_dir}/lib/ruby/site_ruby/3.2.0"
-        copy "#{tmpdir}/lib/ruby/3.2.0/rubygems/defaults", "#{embedded_dir}/lib/ruby/3.2.0/rubygems/defaults"
-      elsif version.start_with?("3.4")
-        copy "#{tmpdir}/lib/ruby/site_ruby/3.4.0/devkit.rb", "#{embedded_dir}/lib/ruby/site_ruby/3.4.0"
-        copy "#{tmpdir}/lib/ruby/site_ruby/3.4.0/ruby_installer.rb", "#{embedded_dir}/lib/ruby/site_ruby/3.4.0"
-        copy "#{tmpdir}/lib/ruby/site_ruby/3.4.0/ruby_installer", "#{embedded_dir}/lib/ruby/site_ruby/3.4.0"
-        copy "#{tmpdir}/lib/ruby/3.4.0/rubygems/defaults", "#{embedded_dir}/lib/ruby/3.4.0/rubygems/defaults"
-      end
+      mkdir "#{embedded_dir}/lib/ruby/site_ruby/3.4.0"
+      mkdir "#{embedded_dir}/lib/ruby/3.4.0/rubygems/defaults"
+      copy "#{tmpdir}/lib/ruby/site_ruby/3.4.0/devkit.rb", "#{embedded_dir}/lib/ruby/site_ruby/3.4.0"
+      copy "#{tmpdir}/lib/ruby/site_ruby/3.4.0/ruby_installer.rb", "#{embedded_dir}/lib/ruby/site_ruby/3.4.0"
+      copy "#{tmpdir}/lib/ruby/site_ruby/3.4.0/ruby_installer", "#{embedded_dir}/lib/ruby/site_ruby/3.4.0"
+      copy "#{tmpdir}/lib/ruby/3.4.0/rubygems/defaults", "#{embedded_dir}/lib/ruby/3.4.0/rubygems/defaults"
 
       # Normally we would symlink the required unix tools.
       # However with the introduction of git-cache to speed up omnibus builds,
@@ -144,20 +52,21 @@ build do
       # We need tar for 'knife cookbook site install' to function correctly and
       # many gems that ship with native extensions assume tar will be available
       # in the PATH.
+      mkdir "#{install_dir}/bin"
       copy "#{tmpdir}/#{msys_dir}/usr/bin/bsdtar.exe", "#{install_dir}/bin/tar.exe"
-      if version >= "3.1.6-1"
-        copy "#{tmpdir}/#{msys_dir}/usr/bin/msys-crypto-3.dll", "#{install_dir}/bin/msys-crypto-3.dll"
-        copy "#{tmpdir}/#{msys_dir}/usr/bin/msys-bz2-1.dll", "#{install_dir}/bin/msys-bz2-1.dll"
-        copy "#{tmpdir}/#{msys_dir}/usr/bin/msys-iconv-2.dll", "#{install_dir}/bin/msys-iconv-2.dll"
-        copy "#{tmpdir}/#{msys_dir}/usr/bin/msys-expat-1.dll", "#{install_dir}/bin/msys-expat-1.dll"
-        copy "#{tmpdir}/#{msys_dir}/usr/bin/msys-lzma-5.dll", "#{install_dir}/bin/msys-lzma-5.dll"
-        copy "#{tmpdir}/#{msys_dir}/usr/bin/msys-lz4-1.dll", "#{install_dir}/bin/msys-lz4-1.dll"
-        copy "#{tmpdir}/#{msys_dir}/usr/bin/msys-2.0.dll", "#{install_dir}/bin/msys-2.0.dll"
-        copy "#{tmpdir}/#{msys_dir}/usr/bin/msys-z.dll", "#{install_dir}/bin/msys-z.dll"
-        copy "#{tmpdir}/#{msys_dir}/usr/bin/msys-zstd-1.dll", "#{install_dir}/bin/msys-zstd-1.dll"
-      end
+      copy "#{tmpdir}/#{msys_dir}/usr/bin/msys-crypto-3.dll", "#{install_dir}/bin/msys-crypto-3.dll"
+      copy "#{tmpdir}/#{msys_dir}/usr/bin/msys-bz2-1.dll", "#{install_dir}/bin/msys-bz2-1.dll"
+      copy "#{tmpdir}/#{msys_dir}/usr/bin/msys-iconv-2.dll", "#{install_dir}/bin/msys-iconv-2.dll"
+      copy "#{tmpdir}/#{msys_dir}/usr/bin/msys-expat-1.dll", "#{install_dir}/bin/msys-expat-1.dll"
+      copy "#{tmpdir}/#{msys_dir}/usr/bin/msys-lzma-5.dll", "#{install_dir}/bin/msys-lzma-5.dll"
+      copy "#{tmpdir}/#{msys_dir}/usr/bin/msys-lz4-1.dll", "#{install_dir}/bin/msys-lz4-1.dll"
+      copy "#{tmpdir}/#{msys_dir}/usr/bin/msys-2.0.dll", "#{install_dir}/bin/msys-2.0.dll"
+      copy "#{tmpdir}/#{msys_dir}/usr/bin/msys-z.dll", "#{install_dir}/bin/msys-z.dll"
+      copy "#{tmpdir}/#{msys_dir}/usr/bin/msys-zstd-1.dll", "#{install_dir}/bin/msys-zstd-1.dll"
     end
 
-    command "#{embedded_dir}/#{msys_dir}/msys2_shell.cmd -defterm -no-start -c exit", env: { "CONFIG" => "" }
+    # Skip msys2 initialization - when copied to a different location the
+    # login shell profile references the original install path and fails.
+    # Real projects handle initialization in their own build steps.
   end
 end

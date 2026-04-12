@@ -4,6 +4,14 @@ homepage "https://www.chef.io"
 
 install_dir "#{default_root}/#{name}"
 
+# Required for MSI packaging on Windows
+if windows?
+  package :msi do
+    upgrade_code "2CD7259C-776D-4DDB-A4C8-6E544E580AA1"
+    wix_light_delay_validation true
+  end
+end
+
 build_version   Omnibus::BuildVersion.semver
 build_iteration 1
 

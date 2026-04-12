@@ -13,17 +13,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# expeditor/ignore: deprecated 2021-04
-#
 
 name "git-windows"
-default_version "2.33.0"
+default_version "2.53.0"
 
 license "LGPL-2.1"
 # the license file does not ship in the portable git package so pull from the source repo
 license_file "https://raw.githubusercontent.com/git-for-windows/git/master/LGPL-2.1"
 
-arch_suffix = windows_arch_i386? ? "32" : "64"
+arch_suffix = "64"
 # The Git for Windows project includes a build number in their tagging
 # scheme and therefore in the URLs for downloaded releases.
 # Occasionally, something goes wrong with a build/release and the "real"
@@ -37,29 +35,8 @@ source url: "https://github.com/git-for-windows/git/releases/download/v#{version
 internal_source url: "#{ENV["ARTIFACTORY_REPO_URL"]}/#{name}/PortableGit-#{version}-#{arch_suffix}-bit.7z.exe",
                 authorization: "X-JFrog-Art-Api:#{ENV["ARTIFACTORY_TOKEN"]}"
 
-if windows_arch_i386?
-  # version_list: url=https://github.com/git-for-windows/git/releases filter=PortableGit-*-32-bit.7z.exe
-  version("2.48.1") { source sha256: "63ddbc7ea11ea8a1375f39f45d38f928dbec564360ad12dd11d0d649474063a0" }
-  version("2.47.0") { source sha256: "b2def285b907ce1d47abd2df8df83df629b768defe08c1fcd4ad91582fc6606b" }
-  version("2.41.0") { source sha256: "e1360e94cb292862fb023018578a1029022a09278b160f7264c6dc444f65c9ca" }
-  version("2.33.0") { source sha256: "c3b6f1a8f8c1b5be2175b7190d35926dce07a58294780291326a437ef0694676" }
-  version("2.31.1") { source sha256: "d6d48e16e3f0ecbc0a45d410ad3ebae15e5618202855ebe72cd9757e4d35b880" }
-  version("2.30.2") { source sha256: "8b203531c91d3f9075aa3ef1e89b0d6e5d18aa289c3bc485e093c9bfb860a116" }
-  version("2.29.2") { source sha256: "5e4dc60d3ee143585da03843613bc4d9032b1b6f4d3a2473ef6d9adc8e4c71c0" }
-  version("2.28.0") { source sha256: "11b854e9246057a22014dbf349adfc160ffa740dba7af0dbd42d642661b2cc7f" }
-  version("2.27.0") { source sha256: "8cbe1e3b57eb9d02e92cff12089454f2cf090c02958080d62e199ef8764542d3" }
-else
-  # version_list: url=https://github.com/git-for-windows/git/releases filter=PortableGit-*-64-bit.7z.exe
-  version("2.48.1") { source sha256: "a4335111b3363871cac632be93d7466154d8eb08782ff55103866b67d6722257" }
-  version("2.47.0") { source sha256: "0b7fcd76902ebde5b4c00ebae597d7f65dff8c3dd0ae59f5059e1aaa3adace87" }
-  version("2.41.0") { source sha256: "fcbaeffd24fdf435a1f7844825253509136377915e6720aa66aa256ec1f83c30" }
-  version("2.33.0") { source sha256: "12c10fad2c2db17d9867dbbacff1adc8be50868b793a73d451c2b878914bb32d" }
-  version("2.31.1") { source sha256: "fce2161a8891c4deefdb8d215ab76498c245072f269843ef1a489c4312baef52" }
-  version("2.30.2") { source sha256: "f719f248de3dd7ef234331f8da95762594a388f6aa62f4c0260df18068e5a447" }
-  version("2.29.2") { source sha256: "7d114e81a541536b025313efcdf6feea1e973323f2b8f53995721bfd511139bd" }
-  version("2.28.0") { source sha256: "0cd682188b76eeb3a5da3a466d4095d2ccd892e07aae5871c45bf8c43cdb3b13" }
-  version("2.27.0") { source sha256: "0fd2218ba73e07e5a664d06e0ce514edcd241a2de0ba29ceca123e7d36aa8f58" }
-end
+# version_list: url=https://github.com/git-for-windows/git/releases filter=PortableGit-*-64-bit.7z.exe
+version("2.53.0") { source sha256: "08713a710ec91ac90de1c09f861289a3b103175f098676e5e664c04dd6c6bf23" }
 
 # The git portable archives come with their own copy of posix related tools
 # i.e. msys/basic posix/what-do-you-mean-you-dont-have-bash tools that git
@@ -89,6 +66,8 @@ build do
 
   command "#{source_7z} -y"
   sync "PortableGit", "#{windows_safe_path(destination)}", env: env
+
+  mkdir "#{install_dir}/embedded/bin"
 
   block "Create bat files to point to executables under embedded/git/cmd" do
     Dir.glob("#{destination}/cmd/*") do |git_bin|
