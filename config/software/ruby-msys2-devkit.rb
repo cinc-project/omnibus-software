@@ -52,6 +52,7 @@ build do
       # We need tar for 'knife cookbook site install' to function correctly and
       # many gems that ship with native extensions assume tar will be available
       # in the PATH.
+      mkdir "#{install_dir}/bin"
       copy "#{tmpdir}/#{msys_dir}/usr/bin/bsdtar.exe", "#{install_dir}/bin/tar.exe"
       copy "#{tmpdir}/#{msys_dir}/usr/bin/msys-crypto-3.dll", "#{install_dir}/bin/msys-crypto-3.dll"
       copy "#{tmpdir}/#{msys_dir}/usr/bin/msys-bz2-1.dll", "#{install_dir}/bin/msys-bz2-1.dll"
