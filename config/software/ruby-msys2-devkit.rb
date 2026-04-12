@@ -65,6 +65,8 @@ build do
       copy "#{tmpdir}/#{msys_dir}/usr/bin/msys-zstd-1.dll", "#{install_dir}/bin/msys-zstd-1.dll"
     end
 
-    command "#{embedded_dir}/#{msys_dir}/msys2_shell.cmd -defterm -no-start -c exit", env: { "CONFIG" => "" }
+    # Initialize msys2 using bash directly since msys2_shell.cmd may not
+    # work when the msys2 installation is copied to a different location
+    command "#{embedded_dir}/#{msys_dir}/usr/bin/bash.exe -lc exit", env: { "CONFIG" => "" }
   end
 end
