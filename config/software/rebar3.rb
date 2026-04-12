@@ -1,5 +1,5 @@
 #
-# Copyright 2012-2014 Chef Software, Inc.
+# Copyright 2026 Oregon State University
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,24 +14,24 @@
 # limitations under the License.
 #
 
-name "rebar"
-default_version "2.6.4"
+name "rebar3"
+default_version "3.27.0"
 
 license "Apache-2.0"
 license_file "LICENSE"
 
 dependency "erlang"
 
-# versions_list: https://github.com/rebar/rebar/tags filter=*.tar.gz
-version("2.6.4") { source sha256: "577246bafa2eb2b2c3f1d0c157408650446884555bf87901508ce71d5cc0bd07" }
+# versions_list: https://github.com/erlang/rebar3/tags filter=*.tar.gz
+version("3.27.0") { source sha256: "985cae6e957334cfa549190b9f5efb9185c184a18fc181c87b8dde096ba79f38" }
 
-source url: "https://github.com/rebar/rebar/archive/refs/tags/#{version}.tar.gz"
+source url: "https://github.com/erlang/rebar3/archive/refs/tags/#{version}.tar.gz"
 
-relative_path "rebar-#{version}"
+relative_path "rebar3-#{version}"
 
 build do
   env = with_standard_compiler_flags(with_embedded_path)
 
   command "./bootstrap", env: env
-  copy "#{project_dir}/rebar", "#{install_dir}/embedded/bin/"
+  copy "#{project_dir}/rebar3", "#{install_dir}/embedded/bin/"
 end
